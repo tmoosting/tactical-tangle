@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyWorlds Tool Template</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    
+    <!-- Material Icons for category icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Early theme detection to prevent flash -->
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('ow_theme');
+            const theme = savedTheme || 'light'; // Default to light mode
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div id="app-container" class="app-container">
+        <!-- Auth Bar (Top Bar) -->
+        <div class="auth-bar">
+            <div class="auth-bar-content">
+                <div class="auth-inputs">
+                    <input type="text" id="api-key" placeholder="api key" class="auth-input" maxlength="10" />
+                    <input type="password" id="api-pin" placeholder="pin" class="auth-input auth-input-pin" maxlength="4" />
+                    <button id="validate-btn" class="btn-validate">load world</button>
+                    <span id="auth-status" class="auth-status"></span>
+                    <span id="world-name" class="world-name hidden"></span>
+                    
+                    <!-- Export Control -->
+                    <div class="import-export-controls hidden" id="import-export-controls">
+                        <button id="export-btn" class="btn-icon" title="Export World">
+                            <span class="material-icons-outlined">download</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="auth-bar-actions">
+                    <button id="help-btn" class="btn-icon" title="Help">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Screen (shown when not authenticated) -->
+        <div id="welcome-screen" class="welcome-screen">
+            <div class="welcome-content">
+                <h2>OnlyWorlds Tool Template</h2>
+                <p>Enter your API key and PIN above to connect to your world.</p>
+                <p class="welcome-link">Get credentials at <a href="https://www.onlyworlds.com" target="_blank">onlyworlds.com</a></p>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div id="main-content" class="main-content hidden">
+            <!-- Sidebar for Element Categories -->
+            <aside class="sidebar">
+                <h2>Elements</h2>
+                <div id="category-list" class="category-list">
+                    <!-- Categories will be populated here -->
+                </div>
+            </aside>
+
+            <!-- Element List -->
+            <div class="element-list-container">
+                <div class="list-header">
+                    <div class="list-header-row">
+                        <h2 id="list-title">Select a Category</h2>
+                        <button id="create-element-btn" class="btn-add-element hidden" title="Create new element">
+                            <span class="material-icons-outlined">add</span>
+                        </button>
+                    </div>
+                    <input type="text" id="search-input" placeholder="" class="search-input hidden" />
+                </div>
+                <div id="element-list" class="element-list">
+                    <p class="empty-state">Select a category from the sidebar to view elements</p>
+                </div>
+            </div>
+
+            <!-- Element Detail View -->
+            <div class="element-detail-container">
+                <div id="element-detail" class="element-detail">
+                    <p class="empty-state">Select an element to view details</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Create Element</h2>
+                <button id="modal-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="element-form">
+                    <div class="form-group">
+                        <label for="element-type">Element Type</label>
+                        <select id="element-type" required>
+                            <!-- Options will be populated -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="element-name">Name *</label>
+                        <input type="text" id="element-name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="element-description">Description</label>
+                        <textarea id="element-description" rows="4"></textarea>
+                    </div>
+                    <!-- Dynamic fields container -->
+                    <div id="dynamic-fields-container"></div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Element</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+    </div>
+
+
+    <!-- Load JavaScript as ES Module -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
