@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tactical Tangle - Battle Setup</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     
@@ -233,6 +238,12 @@
     </div>
     
     <script type="module">
+        import ThemeManager from './js/theme.js';
+        
+        // Initialize theme
+        const themeManager = new ThemeManager();
+        themeManager.init();
+        
         // Form validation and navigation
         document.getElementById('setupForm').addEventListener('submit', (e) => {
             e.preventDefault();

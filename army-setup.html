@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tactical Tangle - Army Builder</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     
@@ -392,7 +397,7 @@
         
         <!-- Main Canvas -->
         <div class="battlefield-container">
-            <div class="canvas-label" id="canvasLabel">Position Your Army</div>
+            <!-- Removed canvas label -->
             <div class="battlefield-canvas" id="battlefieldCanvas">
                 <!-- Units will be added here -->
             </div>
@@ -426,6 +431,11 @@
         import battleConfig from './js/battle-config.js';
         import ArmyBuilder from './js/army-builder.js';
         import UnitCanvas from './js/unit-canvas.js';
+        import ThemeManager from './js/theme.js';
+        
+        // Initialize theme
+        const themeManager = new ThemeManager();
+        themeManager.init();
         
         // Get current player from URL
         const params = new URLSearchParams(window.location.search);
@@ -450,9 +460,7 @@
         updatePointsDisplay();
         updateUnitList();
         
-        // Update canvas label based on player
-        document.getElementById('canvasLabel').textContent = 
-            `${currentArmy.playerName}'s Army Deployment`;
+        // Canvas label was removed, so skip this update
         
         // Update navigation button text
         const nextBtn = document.getElementById('nextBtn');

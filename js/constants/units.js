@@ -10,7 +10,7 @@ export const UNIT_TYPES = {
         minSize: 20,
         maxSize: 400,
         defaultSize: 80,
-        defaultFormation: { width: 10, depth: 8 },  // Visual formation
+        defaultFormation: { width: 16, depth: 5 },  // Wider formation for light infantry
         color: '#8B7355',  // Tan
         icon: 'L',
         description: 'Fast, flexible skirmishers'
@@ -21,7 +21,7 @@ export const UNIT_TYPES = {
         minSize: 40,
         maxSize: 800,
         defaultSize: 120,
-        defaultFormation: { width: 8, depth: 15 },  // Classic phalanx
+        defaultFormation: { width: 10, depth: 12 },  // Less wide phalanx
         color: '#CD7F32',  // Bronze
         icon: 'H',
         description: 'Heavy infantry phalanx'
@@ -32,7 +32,7 @@ export const UNIT_TYPES = {
         minSize: 20,
         maxSize: 200,
         defaultSize: 60,
-        defaultFormation: { width: 12, depth: 5 },  // Wide formation
+        defaultFormation: { width: 10, depth: 6 },  // Less wide formation
         color: '#654321',  // Dark brown
         icon: 'C',
         description: 'Mobile shock troops'

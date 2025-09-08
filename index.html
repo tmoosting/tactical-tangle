@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tactical Tangle - Ancient Greek Warfare</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     
@@ -210,6 +215,7 @@
                 
                 // Initialize theme
                 const themeManager = new ThemeManager();
+                themeManager.init();  // Initialize theme system
                 
                 // Initialize auth
                 const authManager = new AuthManager();

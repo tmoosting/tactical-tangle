@@ -6,7 +6,7 @@
 class ThemeManager {
     constructor() {
         this.STORAGE_KEY = 'ow_theme';
-        this.DEFAULT_THEME = 'light';
+        this.DEFAULT_THEME = 'dark';  // Dark mode as default
         this.currentTheme = null;
         this.toggleButton = null;
     }
@@ -30,13 +30,18 @@ class ThemeManager {
      * Apply the initial theme based on saved preference or default
      */
     applyInitialTheme() {
-        const savedTheme = localStorage.getItem(this.STORAGE_KEY);
+        // For testing: Force dark mode initially, comment out to use saved preference
+        // const savedTheme = localStorage.getItem(this.STORAGE_KEY);
         
-        if (savedTheme) {
-            this.currentTheme = savedTheme;
-        } else {
-            this.currentTheme = this.DEFAULT_THEME;
-        }
+        // if (savedTheme) {
+        //     this.currentTheme = savedTheme;
+        // } else {
+        //     this.currentTheme = this.DEFAULT_THEME;
+        // }
+        
+        // Temporarily force dark mode
+        this.currentTheme = 'dark';
+        localStorage.setItem(this.STORAGE_KEY, 'dark');
         
         this.applyTheme(this.currentTheme);
     }

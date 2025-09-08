@@ -39,45 +39,46 @@
     --welcome-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Dark mode colors */
+/* Dark mode colors - Professional dark blue, black, and orange palette */
 [data-theme="dark"] {
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #242424;
-    --bg-tertiary: #2a2a2a;
-    --bg-hover: #333333;
-    --bg-input: #2d2d2d;
+    /* Background colors - Cool dark grey-blue gradient */
+    --bg-primary: #1a1f2e;        /* Cool dark grey-blue for main background */
+    --bg-secondary: #232937;      /* Slightly lighter grey-blue for cards/panels */
+    --bg-tertiary: #151921;       /* Darker blue-grey for page background */
+    --bg-hover: #2d3548;          /* Lighter grey-blue for hover states */
+    --bg-input: #1e2433;          /* Dark blue-grey for input fields */
     
-    --text-primary: #f0f0f0;
-    --text-secondary: #c8c8c8;
-    --text-tertiary: #999999;
-    --text-inverse: #ffffff;
+    /* Text colors with high contrast */
+    --text-primary: #e8eaed;      /* Off-white for main text (WCAG AAA) */
+    --text-secondary: #b8bec9;    /* Light gray-blue for secondary text */
+    --text-tertiary: #8b95a7;     /* Medium gray-blue for subtle text */
+    --text-inverse: #ffffff;      /* Pure white for high emphasis */
     
-    --border-primary: #404040;
-    --border-secondary: #333333;
-    --border-hover: #606060;
+    /* Border colors */
+    --border-primary: #2d3748;    /* Dark blue-gray borders */
+    --border-secondary: #1a202c;  /* Darker borders */
+    --border-hover: #4a5568;      /* Lighter on hover */
     
-    /* Brand colors stay mostly the same */
-    --brand-primary: #4CAF50;
-    --brand-primary-hover: #5cbf60;
-    --brand-secondary: #1a2332;
-    --brand-tertiary: #252e3a;
+    /* Brand colors - Orange accent with blue undertones */
+    --brand-primary: #ff6b35;     /* Vibrant orange (WCAG AA compliant) */
+    --brand-primary-hover: #ff8255; /* Lighter orange on hover */
+    --brand-secondary: #1e3a5f;   /* Deep blue for secondary actions */
+    --brand-tertiary: #2c5282;    /* Medium blue for tertiary elements */
     
-    --status-error: #f44336;
+    /* Status colors optimized for dark backgrounds */
+    --status-error: #ff5252;      /* Bright red (WCAG AA) */
     --status-error-bg: #3d1f1f;
-    --status-success: #66bb6a;
-    --status-warning: #ffb300;
-    --status-info: #29b6f6;
+    --status-success: #4ade80;    /* Bright green (WCAG AA) */
+    --status-warning: #ffa726;    /* Orange-yellow (WCAG AA) */
+    --status-info: #40c4ff;       /* Bright cyan (WCAG AA) */
     
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+    /* Shadows with blue tint */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.7);
     
-    --welcome-gradient: linear-gradient(135deg, #4a5699 0%, #5c3a6e 100%);
-}
-
-/* Smooth transitions for theme changes */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    /* Gradient with dark blue to orange */
+    --welcome-gradient: linear-gradient(135deg, #1e3a5f 0%, #ff6b35 100%);
 }
 
 /* Reset and Base Styles */
@@ -85,6 +86,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Smooth transitions for theme changes */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 body {

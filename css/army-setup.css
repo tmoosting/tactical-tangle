@@ -27,6 +27,17 @@
     border-color: rgba(0,0,0,0.6);
 }
 
+/* Dark mode unit styles */
+[data-theme="dark"] .unit {
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .unit:hover {
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
 .unit-wrapper.selected .unit {
     border-color: var(--brand-primary, #4CAF50);
     border-width: 3px;
@@ -38,7 +49,7 @@
     cursor: grabbing !important;
 }
 
-/* Unit type colors */
+/* Unit type colors - Light mode defaults */
 .unit.unit-light { 
     background: #8B7355; /* Tan */
 }
@@ -49,6 +60,22 @@
 
 .unit.unit-cavalry { 
     background: #654321; /* Dark brown */
+}
+
+/* Unit type colors - Dark mode */
+[data-theme="dark"] .unit.unit-light {
+    background: #4a9eff; /* Bright blue */
+    border-color: rgba(74, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .unit.unit-hoplite {
+    background: #ff6b35; /* Main orange */
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+[data-theme="dark"] .unit.unit-cavalry {
+    background: #9b59b6; /* Purple */
+    border-color: rgba(155, 89, 182, 0.3);
 }
 
 /* Soldier count displayed inside the unit shape */
@@ -83,6 +110,14 @@
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     z-index: 1;
+}
+
+/* Dark mode styling for unit labels */
+[data-theme="dark"] .unit-name-label {
+    color: #e8eaed;
+    background: rgba(18, 24, 36, 0.95);
+    border: 1px solid rgba(45, 55, 72, 0.8);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 /* General indicator */
@@ -344,4 +379,63 @@
 
 .unit-icon-btn.set-default {
     font-size: 12px;
+}
+
+/* Dark mode icon buttons */
+[data-theme="dark"] .unit-icon-buttons {
+    background: rgba(18, 24, 36, 0.95);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .unit-icon-btn {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .unit-icon-btn:hover {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+}
+
+/* Dark mode canvas and battlefield styles */
+[data-theme="dark"] #unit-canvas {
+    background: linear-gradient(135deg, #1a1f2e 0%, #232937 100%);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .battlefield-container {
+    background: linear-gradient(135deg, #151921 0%, #1a1f2e 100%);
+}
+
+[data-theme="dark"] .battlefield-grid {
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* Dark mode army builder panel */
+[data-theme="dark"] .army-builder-panel {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .army-header {
+    background: var(--bg-secondary);
+    border-bottom-color: var(--border-primary);
+}
+
+/* Dark mode points display */
+[data-theme="dark"] .points-display {
+    background: var(--bg-secondary);
+    border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .points-fill {
+    background: linear-gradient(90deg, #ff6b35 0%, #ff8255 100%);
+}
+
+[data-theme="dark"] .points-fill.error {
+    background: linear-gradient(90deg, #d32f2f 0%, #ff5252 100%);
 }

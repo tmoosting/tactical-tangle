@@ -28,13 +28,26 @@ Then open http://localhost:8080
 
 ## 🎯 Features
 
+### Core Features
 - **OnlyWorlds Integration** - Load characters from your world via API or JSON import
 - **Army Builder** - Design armies with point-based unit creation
 - **Unit System** - Light infantry (1pt), Hoplites (2pt), Cavalry (4pt) per soldier
 - **Drag & Drop** - Position units on battlefield with collision detection
+- **Resize Units** - Drag corners to change unit size and soldier count
 - **Character Assignment** - Assign OnlyWorlds characters as generals or soldiers
 - **Export/Import** - Save and share army configurations as JSON
-- **Minimal Size** - Lightweight, runs on GitHub Pages
+
+### New Features (September 2025)
+- **Unit Shapes** - Hexagon (light infantry), Pentagon (cavalry), Rectangle (hoplites)
+- **Smart Controls** - Icon buttons on selected units:
+  - Copy shape to all units of same type
+  - Align units horizontally
+  - Set as default spawn template
+- **Keyboard Shortcuts**:
+  - `Delete` - Remove selected unit
+  - `ESC` - Deselect current unit
+- **Flexible Points** - Can exceed point limits (visual warning)
+- **Improved Labels** - Soldier count inside units, names below
 
 ## 🛠️ Technology
 

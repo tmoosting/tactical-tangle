@@ -103,11 +103,11 @@ Reusing from the existing OnlyWorlds template tool:
 ## Game Design
 
 ### Visual Style
-- **Unit Blocks**: Colored rectangles representing formations
-  - **Hoplites**: Wide rectangles (8-12 ranks deep)
-  - **Peltasts**: Loose cluster of small circles
-  - **Cavalry**: Triangle/wedge shapes
-  - Size proportional to soldier count (10-300 per block)
+- **Unit Blocks**: Colored shapes representing formations
+  - **Hoplites**: Rectangles (bronze color)
+  - **Light Infantry**: Hexagons (tan color)
+  - **Cavalry**: Pentagons (dark brown color)
+  - Size proportional to soldier count (20-800 per unit)
 - **Characters**: Distinguished within blocks
   - Generals: Larger icon with name label
   - Officers: Medium icon with role indicator
@@ -310,36 +310,38 @@ const worldData = await importManager.importJSON(file);
 
 ## Development Phases (Updated)
 
-### Phase 1: Army Setup UI (Current - 13-18 hours)
+### Phase 1: Army Setup UI (COMPLETED ✅)
 Implementation broken into 4 milestones:
 
-#### Milestone 1: Foundation (4-6 hours)
-1. Create player-setup.html with battle configuration
-2. Create battle-config.js service for state management
-3. Create army-setup.html skeleton with navigation
-4. Wire up page flow with URL parameters
-**Deliverable**: Navigate between pages with state preserved
+#### Milestone 1: Foundation (DONE)
+1. ✅ Create player-setup.html with battle configuration
+2. ✅ Create battle-config.js service for state management
+3. ✅ Create army-setup.html skeleton with navigation
+4. ✅ Wire up page flow with URL parameters
+**Delivered**: Navigate between pages with state preserved
 
-#### Milestone 2: Unit System (4-5 hours)
-1. Create unit constants (types, costs, limits)
-2. Implement army-builder.js with unit logic
-3. Create unit-canvas.js for drag/drop positioning
-4. Style units with CSS (colored rectangles)
-**Deliverable**: Spawn, drag, and resize unit blocks
+#### Milestone 2: Unit System (DONE)
+1. ✅ Create unit constants (types, costs, limits)
+2. ✅ Implement army-builder.js with unit logic
+3. ✅ Create unit-canvas.js for drag/drop positioning
+4. ✅ Style units with CSS (colored shapes)
+5. ✅ Icon buttons for unit management
+6. ✅ Keyboard shortcuts (Delete, ESC)
+**Delivered**: Spawn, drag, resize units with smart controls
 
-#### Milestone 3: Character Integration (3-4 hours)
-1. Load OnlyWorlds characters via API
-2. Create unit detail panel for configuration
-3. Implement character selector with search
-4. Update unit display with assignments
-**Deliverable**: Assign characters to units
+#### Milestone 3: Character Integration (Ready to Start)
+1. ⏳ Load OnlyWorlds characters via API
+2. ⏳ Create unit detail panel for configuration
+3. ⏳ Implement character selector with search
+4. ⏳ Update unit display with assignments
+**Next Deliverable**: Assign characters to units
 
-#### Milestone 4: Polish & Export (2-3 hours)
-1. Points tracking and validation
-2. Army export/import as JSON
-3. Visual polish and error handling
-4. Battle handoff preparation
-**Deliverable**: Complete army builder
+#### Milestone 4: Polish & Export (Partially Done)
+1. ✅ Points tracking with flexible limits
+2. ⏳ Army export/import as JSON
+3. ✅ Visual polish (shapes, labels, colors)
+4. ⏳ Battle handoff preparation
+**Status**: Core polish done, export pending
 
 ### Phase 2: Battle Simulation (Future)
 1. LittleJS + Matter.js physics setup
