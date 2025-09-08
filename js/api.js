@@ -4,8 +4,7 @@
  */
 
 import { ONLYWORLDS } from './constants.js';
-import { authManager } from './auth.js';
-import { getFieldType, isRelationshipField } from './field-types.js';
+// Removed field-types import - not needed for game functionality
 
 export default class OnlyWorldsAPI {
     constructor(authManager) {
@@ -400,16 +399,14 @@ export default class OnlyWorldsAPI {
                 continue;
             }
             
-            const isLinkField = (isRelationshipField && isRelationshipField(fieldName)) ||
-                               (getFieldType && ['uuid', 'array<uuid>'].includes(getFieldType(fieldName)?.type)) ||
-                               (typeof value === 'object' && value !== null && value.id) ||
+            const isLinkField = (typeof value === 'object' && value !== null && value.id) ||
                                (Array.isArray(value) && value.length > 0 && 
                                 typeof value[0] === 'object' && value[0] !== null && value[0].id);
             
             // Handle null/undefined values for link fields
             if ((value === null || value === undefined) && isLinkField) {
-                const fieldType = getFieldType ? getFieldType(fieldName) : null;
-                if (fieldType && fieldType.type === 'array<uuid>') {
+                const fieldType = null; // Simplified - no field type checking
+                if (false) {
                     const apiFieldName = fieldName.endsWith('_ids') ? fieldName : `${fieldName}_ids`;
                     cleaned[apiFieldName] = [];
                 } else {
@@ -439,13 +436,9 @@ export default class OnlyWorldsAPI {
                     const apiFieldName = fieldName.endsWith('_id') ? fieldName : `${fieldName}_id`;
                     cleaned[apiFieldName] = value.id;
                 } else if (typeof value === 'string' && value) {
-                    if (getFieldType && getFieldType(fieldName).type === 'array<uuid>') {
-                        const apiFieldName = fieldName.endsWith('_ids') ? fieldName : `${fieldName}_ids`;
-                        cleaned[apiFieldName] = [value];
-                    } else {
-                        const apiFieldName = fieldName.endsWith('_id') ? fieldName : `${fieldName}_id`;
-                        cleaned[apiFieldName] = value;
-                    }
+                    // Simplified - always treat single strings as single IDs
+                    const apiFieldName = fieldName.endsWith('_id') ? fieldName : `${fieldName}_id`;
+                    cleaned[apiFieldName] = value;
                 } else if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
                     const apiFieldName = fieldName.endsWith('_ids') ? fieldName : `${fieldName}_ids`;
                     cleaned[apiFieldName] = value.filter(id => id);
@@ -542,5 +535,5 @@ export default class OnlyWorldsAPI {
     }
 }
 
-// Create and export singleton instance
-export const apiService = new OnlyWorldsAPI(authManager);
+// Export the class, not a singleton - let the app create instances
+// export const apiService = new OnlyWorldsAPI(authManager);  // REMOVED - was causing error

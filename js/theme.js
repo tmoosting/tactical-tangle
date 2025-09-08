@@ -140,5 +140,7 @@ class ThemeManager {
     }
 }
 
-const themeManager = new ThemeManager();
-export { themeManager };
+// Export the class as default
+export default ThemeManager;
+// const themeManager = new ThemeManager();  // REMOVED - let app create instance
+// export { themeManager };

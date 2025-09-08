@@ -5,11 +5,12 @@
  * Educational patterns demonstrated: Blob API, Promise.all(), retry logic
  */
 
-import { authManager } from './auth.js';
+import AuthManager from './auth.js';
 
 export class ImportExportManager {
-    constructor(apiService) {
+    constructor(apiService, authManager = null) {
         this.api = apiService;
+        this.auth = authManager;
         
         // All 22 OnlyWorlds element types (capital case for website compatibility)
         this.ELEMENT_TYPES = [
@@ -32,7 +33,7 @@ export class ImportExportManager {
             // Fetch all elements in parallel for efficiency
             const allData = await this.fetchAllElements();
             
-            const world = authManager.getCurrentWorld();
+            const world = this.auth?.getCurrentWorld();
             const worldName = world?.name || 'world';
             
             const exportData = this.formatExportData(allData, world);

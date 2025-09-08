@@ -143,5 +143,5 @@ export default class AuthManager {
     }
 }
 
-// Create and export singleton instance
-export const authManager = new AuthManager();
+// Export the class only - let the app create instances
+// export const authManager = new AuthManager();  // REMOVED - not needed

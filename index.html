@@ -3,144 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OnlyWorlds Tool Template</title>
+    <title>Tactical Tangle - Ancient Greek Warfare</title>
     
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-    <link rel="icon" type="image/png" href="assets/favicon.png">
-    
-    <!-- Material Icons for category icons -->
+    <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     
-    <!-- Early theme detection to prevent flash -->
-    <script>
-        // Apply theme immediately to prevent flash
-        (function() {
-            const savedTheme = localStorage.getItem('ow_theme');
-            const theme = savedTheme || 'light'; // Default to light mode
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
-    
+    <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        /* Temporary styles for basic layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-section {
+            background: var(--bg-secondary, #f5f5f5);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .game-section {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: var(--bg-secondary, #f5f5f5);
+            border-radius: 8px;
+        }
+        
+        .game-section.active {
+            display: block;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-primary, #ddd);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: var(--text-secondary, #666);
+        }
+        
+        .error-message {
+            color: #d32f2f;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #555;
+        }
+        
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <!-- Main Application Container -->
-    <div id="app-container" class="app-container">
-        <!-- Auth Bar (Top Bar) -->
-        <div class="auth-bar">
-            <div class="auth-bar-content">
-                <div class="auth-inputs">
-                    <input type="text" id="api-key" placeholder="api key" class="auth-input" maxlength="10" />
-                    <input type="password" id="api-pin" placeholder="pin" class="auth-input auth-input-pin" maxlength="4" />
-                    <button id="validate-btn" class="btn-validate">load world</button>
-                    <span id="auth-status" class="auth-status"></span>
-                    <span id="world-name" class="world-name hidden"></span>
-                    
-                    <!-- Export Control -->
-                    <div class="import-export-controls hidden" id="import-export-controls">
-                        <button id="export-btn" class="btn-icon" title="Export World">
-                            <span class="material-icons-outlined">download</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="auth-bar-actions">
-                    <button id="help-btn" class="btn-icon" title="Help">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Welcome Screen (shown when not authenticated) -->
-        <div id="welcome-screen" class="welcome-screen">
-            <div class="welcome-content">
-                <h2>OnlyWorlds Tool Template</h2>
-                <p>Enter your API key and PIN above to connect to your world.</p>
-                <p class="welcome-link">Get credentials at <a href="https://www.onlyworlds.com" target="_blank">onlyworlds.com</a></p>
-            </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚔️ Tactical Tangle</h1>
+            <p>Ancient Greek Warfare with OnlyWorlds Characters</p>
         </div>
         
-        <!-- Main Content Area -->
-        <div id="main-content" class="main-content hidden">
-            <!-- Sidebar for Element Categories -->
-            <aside class="sidebar">
-                <h2>Elements</h2>
-                <div id="category-list" class="category-list">
-                    <!-- Categories will be populated here -->
-                </div>
-            </aside>
-
-            <!-- Element List -->
-            <div class="element-list-container">
-                <div class="list-header">
-                    <div class="list-header-row">
-                        <h2 id="list-title">Select a Category</h2>
-                        <button id="create-element-btn" class="btn-add-element hidden" title="Create new element">
-                            <span class="material-icons-outlined">add</span>
-                        </button>
-                    </div>
-                    <input type="text" id="search-input" placeholder="" class="search-input hidden" />
-                </div>
-                <div id="element-list" class="element-list">
-                    <p class="empty-state">Select a category from the sidebar to view elements</p>
-                </div>
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-section">
+            <h2>Connect to OnlyWorlds</h2>
+            <div class="form-group">
+                <label for="apiKey">API Key</label>
+                <input type="text" id="apiKey" placeholder="Enter your 10-digit API key" maxlength="10">
+                <small>Get your API credentials from <a href="https://www.onlyworlds.com/profile" target="_blank">onlyworlds.com</a></small>
             </div>
-
-            <!-- Element Detail View -->
-            <div class="element-detail-container">
-                <div id="element-detail" class="element-detail">
-                    <p class="empty-state">Select an element to view details</p>
-                </div>
+            
+            <div class="form-group">
+                <label for="apiPin">API PIN</label>
+                <input type="password" id="apiPin" placeholder="Enter your 4-digit PIN" maxlength="4">
+            </div>
+            
+            <button id="connectBtn" class="btn btn-primary">
+                <span class="material-icons-outlined">link</span>
+                Connect
+            </button>
+            
+            <div id="authError" class="error-message" style="display: none;"></div>
+        </div>
+        
+        <!-- Game Section (shown after authentication) -->
+        <div id="gameSection" class="game-section">
+            <h2>Welcome, Commander!</h2>
+            <p>Your world "<span id="worldName"></span>" is connected.</p>
+            
+            <div class="button-group">
+                <button id="setupBattleBtn" class="btn btn-primary btn-large">
+                    <span class="material-icons-outlined">groups</span>
+                    Setup New Battle
+                </button>
+                
+                <button id="quickBattleBtn" class="btn btn-secondary btn-large">
+                    <span class="material-icons-outlined">bolt</span>
+                    Quick Battle
+                </button>
+            </div>
+            
+            <div class="button-group">
+                <button id="importJsonBtn" class="btn btn-secondary">
+                    <span class="material-icons-outlined">upload</span>
+                    Import World JSON
+                </button>
+                
+                <button id="exportJsonBtn" class="btn btn-secondary">
+                    <span class="material-icons-outlined">download</span>
+                    Export World
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- Create/Edit Modal -->
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">Create Element</h2>
-                <button id="modal-close" class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="element-form">
-                    <div class="form-group">
-                        <label for="element-type">Element Type</label>
-                        <select id="element-type" required>
-                            <!-- Options will be populated -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="element-name">Name *</label>
-                        <input type="text" id="element-name" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="element-description">Description</label>
-                        <textarea id="element-description" rows="4"></textarea>
-                    </div>
-                    <!-- Dynamic fields container -->
-                    <div id="dynamic-fields-container"></div>
-                    <div class="form-actions">
-                        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Element</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Indicator -->
-    <div id="loading" class="loading hidden">
-        <div class="spinner"></div>
-    </div>
-
-
-    <!-- Load JavaScript as ES Module -->
-    <script type="module" src="js/app.js"></script>
+    
+    <!-- Scripts -->
+    <script type="module">
+        (async () => {
+            console.log('Loading modules...');
+            
+            try {
+                const { default: AuthManager } = await import('./js/auth.js');
+                const { default: OnlyWorldsAPI } = await import('./js/api.js');
+                const { ImportExportManager } = await import('./js/import-export.js');
+                const { default: ThemeManager } = await import('./js/theme.js');
+                
+                console.log('Modules loaded successfully');
+                
+                // Initialize theme
+                const themeManager = new ThemeManager();
+                
+                // Initialize auth
+                const authManager = new AuthManager();
+                const api = new OnlyWorldsAPI(authManager);
+                const importExport = new ImportExportManager(api, authManager);
+                
+                // DOM elements
+                const authSection = document.getElementById('authSection');
+                const gameSection = document.getElementById('gameSection');
+                const connectBtn = document.getElementById('connectBtn');
+                const authError = document.getElementById('authError');
+                const worldName = document.getElementById('worldName');
+                
+                console.log('Connect button:', connectBtn);
+                
+                // Connect button handler
+                connectBtn.addEventListener('click', async () => {
+                    console.log('Connect button clicked!');
+                    const apiKey = document.getElementById('apiKey').value;
+                    const apiPin = document.getElementById('apiPin').value;
+                    
+                    if (!apiKey || !apiPin) {
+                        authError.textContent = 'Please enter both API Key and PIN';
+                        authError.style.display = 'block';
+                        return;
+                    }
+                    
+                    connectBtn.disabled = true;
+                    connectBtn.innerHTML = '<span class="material-icons-outlined spin">refresh</span> Connecting...';
+                    
+                    try {
+                        await authManager.authenticate(apiKey, apiPin);
+                        
+                        // Success - show game section
+                        authSection.style.display = 'none';
+                        gameSection.classList.add('active');
+                        
+                        const world = authManager.getCurrentWorld();
+                        worldName.textContent = world.name;
+                        
+                    } catch (error) {
+                        console.error('Auth error:', error);
+                        authError.textContent = error.message;
+                        authError.style.display = 'block';
+                    } finally {
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = '<span class="material-icons-outlined">link</span> Connect';
+                    }
+                });
+                
+                // Setup Battle button
+                document.getElementById('setupBattleBtn').addEventListener('click', () => {
+                    alert('Setup screen coming soon! This will be the army builder.');
+                });
+                
+                // Quick Battle button
+                document.getElementById('quickBattleBtn').addEventListener('click', () => {
+                    alert('Quick Battle coming soon! Use Setup Battle for now.');
+                });
+                
+                // Export button
+                document.getElementById('exportJsonBtn').addEventListener('click', async () => {
+                    await importExport.exportWorld();
+                });
+                
+                // Import button
+                document.getElementById('importJsonBtn').addEventListener('click', () => {
+                    alert('Import functionality coming soon!');
+                });
+                
+            } catch (error) {
+                console.error('Failed to load modules:', error);
+                alert('Failed to load game modules. Check console for details.');
+            }
+        })();
+    </script>
 </body>
 </html>
