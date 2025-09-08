@@ -158,14 +158,33 @@ export class ArmyBuilder {
      * Get default position for new unit
      */
     getDefaultPosition() {
-        // Place units in a grid pattern
+        // Get canvas size for centering
+        const canvas = this.unitCanvas ? this.unitCanvas.canvas : null;
+        let canvasWidth = 800; // fallback
+        let canvasHeight = 600; // fallback
+        
+        if (canvas) {
+            canvasWidth = canvas.offsetWidth || canvas.clientWidth;
+            canvasHeight = canvas.offsetHeight || canvas.clientHeight;
+        }
+        
+        // Calculate center position
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+        
+        // Place units in a grid pattern around center
         const unitCount = this.army.units.length;
         const col = unitCount % 5;
         const row = Math.floor(unitCount / 5);
         
+        // Start from center and spread outward
+        const gridSpacing = 120;
+        const gridOffsetX = (col - 2) * gridSpacing; // -2 to center the 5-column grid
+        const gridOffsetY = (row - 1) * gridSpacing; // -1 to start slightly above center
+        
         return {
-            x: 50 + (col * 150),
-            y: 50 + (row * 150)
+            x: Math.max(20, centerX + gridOffsetX - 60), // -60 to account for unit width, min 20px margin
+            y: Math.max(20, centerY + gridOffsetY - 40)  // -40 to account for unit height, min 20px margin
         };
     }
     

@@ -16,6 +16,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/army-setup.css">
+    <link rel="stylesheet" href="css/character-panel.css">
     
     <style>
         body {
@@ -328,6 +329,32 @@
         .unit.light { background: #8B7355; }
         .unit.hoplite { background: #CD7F32; }
         .unit.cavalry { background: #654321; }
+        
+        /* Player 1 Army Indicator */
+        .player1-indicator {
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .opponent-army-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .opponent-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        .opponent-points {
+            color: #4CAF50;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -345,6 +372,14 @@
                         <div class="points-bar">
                             <div class="points-fill" id="pointsBar"></div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Player 1 Army Indicator (only show for Player 2) -->
+                <div id="player1Indicator" class="player1-indicator" style="display: none;">
+                    <div class="opponent-army-info">
+                        <span class="opponent-label">Player 1 Army:</span>
+                        <span id="player1Points" class="opponent-points">0 pts</span>
                     </div>
                 </div>
             </div>
@@ -432,10 +467,20 @@
         import ArmyBuilder from './js/army-builder.js';
         import UnitCanvas from './js/unit-canvas.js';
         import ThemeManager from './js/theme.js';
+        import AuthManager from './js/auth.js';
+        import OnlyWorldsAPI from './js/api.js';
         
         // Initialize theme
         const themeManager = new ThemeManager();
         themeManager.init();
+        
+        // Initialize auth and API
+        const authManager = new AuthManager();
+        const apiService = new OnlyWorldsAPI(authManager);
+        
+        // Make available globally for unit canvas
+        window.authManager = authManager;
+        window.apiService = apiService;
         
         // Get current player from URL
         const params = new URLSearchParams(window.location.search);
@@ -459,6 +504,16 @@
         document.getElementById('pointsMax').textContent = currentArmy.maxPoints;
         updatePointsDisplay();
         updateUnitList();
+        
+        // Show Player 1 army info if this is Player 2
+        if (currentPlayer === 2) {
+            const player1Army = battleConfig.getArmy(0);
+            const player1Indicator = document.getElementById('player1Indicator');
+            const player1PointsSpan = document.getElementById('player1Points');
+            
+            player1Indicator.style.display = 'block';
+            player1PointsSpan.textContent = `${player1Army.usedPoints} pts`;
+        }
         
         // Canvas label was removed, so skip this update
         
@@ -605,6 +660,8 @@
         if (currentArmy.units.length > 0) {
             unitCanvas.renderAllUnits();
         }
+        
+        // JSON Import functionality removed - can be done from main index page
     </script>
 </body>
 </html>

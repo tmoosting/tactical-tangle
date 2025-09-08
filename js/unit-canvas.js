@@ -14,8 +14,19 @@ export class UnitCanvas {
         this.resizeState = null;
         this.defaultSpawnSettings = {}; // Store default spawn settings per unit type
         
+        // Undo/Redo system
+        this.history = [];
+        this.historyIndex = -1;
+        this.maxHistorySize = 50;
+        
+        // Character panel
+        this.characterPanel = null;
+        this.availableCharacters = []; // Store loaded characters
+        
         this.initEventListeners();
         this.initKeyboardListeners();
+        this.initCharacterPanel();
+        this.loadCharacters(); // Load characters on initialization
     }
     
     /**
@@ -55,6 +66,14 @@ export class UnitCanvas {
         const nameLabel = document.createElement('div');
         nameLabel.className = 'unit-name-label';
         nameLabel.textContent = unit.name;
+        nameLabel.title = 'Click to edit unit name';
+        nameLabel.style.cursor = 'pointer';
+        
+        // Add click handler for name editing
+        nameLabel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editUnitName(unit.id, nameLabel);
+        });
         
         // Add resize handles to wrapper
         this.addResizeHandles(wrapper);
@@ -232,6 +251,11 @@ export class UnitCanvas {
      * Start dragging a unit
      */
     startDrag(e, wrapperElement) {
+        // Save history before drag
+        if (!this.dragState) {
+            this.saveHistory();
+        }
+        
         const unitId = wrapperElement.dataset.unitId;
         this.selectUnit(unitId);
         
@@ -326,6 +350,11 @@ export class UnitCanvas {
      * Start resizing a unit
      */
     startResize(e, unitElement, resizeHandle) {
+        // Save history before resize
+        if (!this.resizeState) {
+            this.saveHistory();
+        }
+        
         const unitId = unitElement.dataset.unitId;
         this.selectUnit(unitId);
         
@@ -489,6 +518,16 @@ export class UnitCanvas {
             this.copyShapeToAllOfType(unit.id);
         };
         
+        // Duplicate button
+        const duplicateBtn = document.createElement('button');
+        duplicateBtn.className = 'unit-icon-btn duplicate';
+        duplicateBtn.innerHTML = '➕';
+        duplicateBtn.title = 'Duplicate unit (Ctrl+D)';
+        duplicateBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.duplicateUnit(unit.id);
+        };
+        
         // Align button
         const alignBtn = document.createElement('button');
         alignBtn.className = 'unit-icon-btn align-right';
@@ -509,9 +548,21 @@ export class UnitCanvas {
             this.setDefaultSpawnShape(unit.id, e.target);
         };
         
+        // Character assignment button
+        const assignBtn = document.createElement('button');
+        assignBtn.className = 'unit-icon-btn assign-characters';
+        assignBtn.innerHTML = '👥';
+        assignBtn.title = 'Assign characters';
+        assignBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.showCharacterPanel(unit.id);
+        };
+        
         buttonContainer.appendChild(copyShapeBtn);
+        buttonContainer.appendChild(duplicateBtn);
         buttonContainer.appendChild(alignBtn);
         buttonContainer.appendChild(setDefaultBtn);
+        buttonContainer.appendChild(assignBtn);
         element.appendChild(buttonContainer);
     }
     
@@ -590,20 +641,674 @@ export class UnitCanvas {
      * Initialize keyboard event listeners
      */
     initKeyboardListeners() {
+        // Use capture phase to intercept before browser
         document.addEventListener('keydown', (e) => {
+            // Skip if in input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            
             // Delete key - remove selected unit
             if (e.key === 'Delete' && this.selectedUnit && !this.dragState && !this.resizeState) {
+                this.saveHistory();
                 const result = this.armyBuilder.removeUnit(this.selectedUnit);
                 if (result.success) {
                     this.selectedUnit = null;
                 }
             }
             
-            // Escape key - deselect unit
+            // Escape key - deselect unit and hide panel
             if (e.key === 'Escape') {
                 this.selectUnit(null);
+                if (this.characterPanel) {
+                    this.characterPanel.style.display = 'none';
+                }
+            }
+            
+            // Ctrl/Cmd + Z - Undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.undo();
+                return false;
+            }
+            
+            // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z - Redo
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.redo();
+                return false;
+            }
+            
+            // Ctrl/Cmd + D - Duplicate selected unit
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd' && this.selectedUnit) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.duplicateUnit(this.selectedUnit);
+                return false;
+            }
+        }, true); // Capture phase
+    }
+    
+    /**
+     * Save current state to history for undo
+     */
+    saveHistory() {
+        // Clone the current army state
+        const state = {
+            units: JSON.parse(JSON.stringify(this.armyBuilder.army.units)),
+            totalPoints: this.armyBuilder.army.totalPoints || this.armyBuilder.army.usedPoints
+        };
+        
+        // Remove any history after current index
+        this.history = this.history.slice(0, this.historyIndex + 1);
+        
+        // Add new state
+        this.history.push(state);
+        this.historyIndex++;
+        
+        // Limit history size
+        if (this.history.length > this.maxHistorySize) {
+            this.history.shift();
+            this.historyIndex--;
+        }
+    }
+    
+    /**
+     * Undo last action
+     */
+    undo() {
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            this.restoreState(this.history[this.historyIndex]);
+        }
+    }
+    
+    /**
+     * Redo previously undone action
+     */
+    redo() {
+        if (this.historyIndex < this.history.length - 1) {
+            this.historyIndex++;
+            this.restoreState(this.history[this.historyIndex]);
+        }
+    }
+    
+    /**
+     * Restore army state from history
+     */
+    restoreState(state) {
+        // Clear current units
+        this.armyBuilder.army.units = [];
+        this.armyBuilder.unitElements.clear();
+        this.canvas.innerHTML = '';
+        
+        // Restore units
+        state.units.forEach(unitData => {
+            this.armyBuilder.army.units.push(unitData);
+            this.renderUnit(unitData);
+        });
+        
+        // Update points and UI
+        if (this.armyBuilder.army.totalPoints !== undefined) {
+            this.armyBuilder.army.totalPoints = state.totalPoints;
+        } else {
+            this.armyBuilder.army.usedPoints = state.totalPoints;
+        }
+        
+        if (this.armyBuilder.updatePointsDisplay) {
+            this.armyBuilder.updatePointsDisplay();
+        }
+        if (this.armyBuilder.updateUnitList) {
+            this.armyBuilder.updateUnitList();
+        }
+        
+        // Deselect any selected unit
+        this.selectUnit(null);
+    }
+    
+    /**
+     * Duplicate the selected unit
+     */
+    duplicateUnit(unitId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        this.saveHistory();
+        
+        // Get the visual size of the unit
+        const unitSize = getUnitVisualSize(unit.formation);
+        
+        // Calculate position - spawn to the right with 10px gap, exactly aligned
+        const gap = 10;
+        let newX = unit.position.x + unitSize.width + gap;
+        let newY = unit.position.y; // Same Y position for perfect alignment
+        
+        // If it would go off screen to the right, try left side
+        if (newX + unitSize.width > this.canvas.offsetWidth) {
+            newX = unit.position.x - unitSize.width - gap;
+            
+            // If left side is also off screen, place below instead
+            if (newX < 0) {
+                newX = unit.position.x; // Same X position
+                newY = unit.position.y + unitSize.height + gap;
+                
+                // If below is off screen, just offset diagonally
+                if (newY + unitSize.height > this.canvas.offsetHeight) {
+                    newX = Math.min(unit.position.x + 30, this.canvas.offsetWidth - unitSize.width);
+                    newY = Math.min(unit.position.y + 30, this.canvas.offsetHeight - unitSize.height);
+                }
+            }
+        }
+        
+        // Create a new unit with same properties but aligned position
+        const newUnit = {
+            ...unit,
+            id: `unit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            position: {
+                x: newX,
+                y: newY
+            },
+            name: `${unit.name} (Copy)`,
+            general: null, // Don't copy character assignments
+            soldiers: []
+        };
+        
+        // Calculate cost
+        const unitType = UNIT_TYPES[unit.type];
+        const cost = unit.soldierCount * unitType.costPerSoldier;
+        
+        // Add the new unit
+        this.armyBuilder.army.units.push(newUnit);
+        if (this.armyBuilder.army.totalPoints !== undefined) {
+            this.armyBuilder.army.totalPoints += cost;
+        } else {
+            this.armyBuilder.army.usedPoints += cost;
+        }
+        newUnit.cost = cost;
+        
+        // Render and select the new unit
+        this.renderUnit(newUnit);
+        this.selectUnit(newUnit.id);
+        
+        // Update UI
+        if (this.armyBuilder.updatePointsDisplay) {
+            this.armyBuilder.updatePointsDisplay();
+        }
+        if (this.armyBuilder.updateUnitList) {
+            this.armyBuilder.updateUnitList();
+        }
+    }
+    
+    /**
+     * Initialize character assignment panel
+     */
+    initCharacterPanel() {
+        // Create the panel element
+        const panel = document.createElement('div');
+        panel.className = 'character-panel';
+        panel.style.display = 'none';
+        panel.innerHTML = `
+            <div class="character-panel-header">
+                <h3>Assign Characters</h3>
+                <button class="character-panel-close">×</button>
+            </div>
+            <div class="character-panel-content">
+                <div class="character-search">
+                    <input type="text" placeholder="Search characters..." class="character-search-input" />
+                </div>
+                <div class="character-roles">
+                    <div class="character-role-section">
+                        <h4>General</h4>
+                        <div class="general-slot">
+                            <div class="empty-slot">No general assigned</div>
+                        </div>
+                    </div>
+                    <div class="character-role-section">
+                        <h4>Soldiers</h4>
+                        <div class="soldiers-list">
+                            <div class="empty-slot">No soldiers assigned</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="available-characters">
+                    <h4>Available Characters</h4>
+                    <div class="character-list">
+                        <div class="loading">Characters will load from OnlyWorlds API...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(panel);
+        this.characterPanel = panel;
+        
+        // Close button handler
+        panel.querySelector('.character-panel-close').addEventListener('click', () => {
+            panel.style.display = 'none';
+        });
+        
+        // Search input handler
+        const searchInput = panel.querySelector('.character-search-input');
+        searchInput.addEventListener('input', (e) => {
+            this.filterCharacters(e.target.value);
+        });
+    }
+    
+    /**
+     * Show character panel for a unit
+     */
+    showCharacterPanel(unitId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        const unitElement = this.armyBuilder.unitElements.get(unitId);
+        if (!unitElement) return;
+        
+        // Position panel near the unit
+        const rect = unitElement.getBoundingClientRect();
+        const panel = this.characterPanel;
+        
+        panel.style.display = 'block';
+        panel.style.position = 'fixed';
+        
+        // Calculate optimal position
+        const panelWidth = 320;
+        const panelHeight = 400;
+        
+        // Try to position to the right of the unit
+        let left = rect.right + 10;
+        let top = rect.top;
+        
+        // Adjust if it would go off screen
+        if (left + panelWidth > window.innerWidth) {
+            left = rect.left - panelWidth - 10; // Show on left instead
+        }
+        if (top + panelHeight > window.innerHeight) {
+            top = window.innerHeight - panelHeight - 10;
+        }
+        if (top < 10) {
+            top = 10;
+        }
+        
+        panel.style.left = left + 'px';
+        panel.style.top = top + 'px';
+        
+        // Store current unit context
+        panel.dataset.unitId = unitId;
+        
+        // Update panel content for this unit
+        this.updateCharacterPanel(unit);
+        
+        // Display available characters
+        this.displayAvailableCharacters();
+    }
+    
+    /**
+     * Update character panel content for a unit
+     */
+    updateCharacterPanel(unit) {
+        const generalSlot = this.characterPanel.querySelector('.general-slot');
+        const soldiersList = this.characterPanel.querySelector('.soldiers-list');
+        
+        // Update general slot
+        if (unit.general) {
+            generalSlot.innerHTML = `
+                <div class="assigned-character">
+                    <span class="character-icon">👑</span>
+                    <span class="character-name">${unit.general.name}</span>
+                    <button class="remove-character" data-role="general">×</button>
+                </div>
+            `;
+        } else {
+            generalSlot.innerHTML = '<div class="empty-slot">No general assigned</div>';
+        }
+        
+        // Update soldiers list
+        if (unit.soldiers && unit.soldiers.length > 0) {
+            soldiersList.innerHTML = unit.soldiers.map(soldier => `
+                <div class="assigned-character">
+                    <span class="character-icon">⚔️</span>
+                    <span class="character-name">${soldier.name}</span>
+                    <button class="remove-character" data-role="soldier" data-character-id="${soldier.id}">×</button>
+                </div>
+            `).join('');
+        } else {
+            soldiersList.innerHTML = '<div class="empty-slot">No soldiers assigned</div>';
+        }
+        
+        // Add remove handlers
+        this.characterPanel.querySelectorAll('.remove-character').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const role = e.target.dataset.role;
+                const characterId = e.target.dataset.characterId;
+                this.removeCharacterFromUnit(unit.id, role, characterId);
+            });
+        });
+    }
+    
+    /**
+     * Remove character from unit
+     */
+    removeCharacterFromUnit(unitId, role, characterId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        this.saveHistory();
+        
+        if (role === 'general') {
+            unit.general = null;
+        } else if (role === 'soldier') {
+            unit.soldiers = unit.soldiers.filter(s => s.id !== characterId);
+        }
+        
+        // Update the display
+        this.updateCharacterPanel(unit);
+        this.updateUnitCharacterIndicators(unitId);
+        
+        // Refresh the available characters list to show unassigned characters
+        this.displayAvailableCharacters();
+    }
+    
+    /**
+     * Update character indicators on unit
+     */
+    updateUnitCharacterIndicators(unitId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        const unitElement = this.armyBuilder.unitElements.get(unitId);
+        if (!unit || !unitElement) return;
+        
+        // Remove existing indicators
+        unitElement.querySelectorAll('.character-indicator').forEach(el => el.remove());
+        
+        // Add general indicator
+        if (unit.general) {
+            const generalIndicator = document.createElement('div');
+            generalIndicator.className = 'character-indicator general-indicator';
+            generalIndicator.innerHTML = '👑';
+            generalIndicator.title = `General: ${unit.general.name}`;
+            unitElement.appendChild(generalIndicator);
+        }
+        
+        // Add soldier count indicator
+        if (unit.soldiers && unit.soldiers.length > 0) {
+            const soldierIndicator = document.createElement('div');
+            soldierIndicator.className = 'character-indicator soldier-indicator';
+            soldierIndicator.innerHTML = `⚔️ ${unit.soldiers.length}`;
+            
+            // Create tooltip with all soldier names
+            const soldierNames = unit.soldiers.map(s => s.name).join(', ');
+            soldierIndicator.title = `Soldiers: ${soldierNames}`;
+            
+            unitElement.appendChild(soldierIndicator);
+        }
+    }
+    
+    /**
+     * Filter characters in the panel by search term
+     */
+    filterCharacters(searchTerm) {
+        const characterElements = this.characterPanel.querySelectorAll('.character-list-item');
+        const term = searchTerm.toLowerCase();
+        
+        characterElements.forEach(el => {
+            const name = el.dataset.characterName?.toLowerCase() || '';
+            const description = el.dataset.characterDescription?.toLowerCase() || '';
+            const visible = !term || name.includes(term) || description.includes(term);
+            el.style.display = visible ? 'block' : 'none';
+        });
+    }
+    
+    /**
+     * Load characters from localStorage or API
+     */
+    async loadCharacters() {
+        try {
+            console.log('🔍 Loading characters...');
+            console.log('Current availableCharacters count:', this.availableCharacters.length);
+            
+            // First try to get from localStorage (from JSON import)
+            const storedData = localStorage.getItem('onlyworlds_import_data');
+            console.log('📦 Stored data found:', !!storedData);
+            if (storedData) {
+                const data = JSON.parse(storedData);
+                console.log('🔎 Parsed data structure:', Object.keys(data));
+                console.log('🔎 Elements in data:', data.elements ? Object.keys(data.elements) : 'No elements key');
+                
+                // Look for Character elements
+                if (data.elements && data.elements.Character) {
+                    this.availableCharacters = data.elements.Character;
+                    console.log(`✅ Loaded ${this.availableCharacters.length} characters from import`);
+                    console.log('👥 First character sample:', this.availableCharacters[0] ? {
+                        id: this.availableCharacters[0].id,
+                        name: this.availableCharacters[0].name
+                    } : 'No characters');
+                    return;
+                } else {
+                    console.log('❌ No Character elements found in import data');
+                }
+            } else {
+                console.log('ℹ️ No stored data found in localStorage');
+            }
+            
+            // If no localStorage data, try API (if auth exists)
+            console.log('🔐 Checking API authentication...');
+            const authManager = window.authManager || this.armyBuilder.authManager;
+            console.log('Auth manager exists:', !!authManager);
+            console.log('Is authenticated:', authManager ? authManager.checkAuth() : 'N/A');
+            
+            if (authManager && authManager.checkAuth()) {
+                const api = window.apiService || this.armyBuilder.apiService;
+                console.log('API service exists:', !!api);
+                if (api) {
+                    console.log('🌐 Fetching characters from API...');
+                    const characters = await api.getElements('character');
+                    console.log('API response:', characters);
+                    console.log('API characters count:', characters ? characters.length : 'null/undefined');
+                    
+                    if (characters && characters.length > 0) {
+                        this.availableCharacters = characters;
+                        console.log(`✅ Loaded ${this.availableCharacters.length} characters from API`);
+                        console.log('👥 First character sample:', {
+                            id: characters[0].id,
+                            name: characters[0].name
+                        });
+                    } else {
+                        console.log('❌ No characters returned from API');
+                    }
+                } else {
+                    console.log('❌ No API service available');
+                }
+            } else {
+                console.log('❌ Not authenticated for API access');
+            }
+            
+            console.log('🏁 Final character count:', this.availableCharacters.length);
+        } catch (error) {
+            console.error('❌ Failed to load characters:', error);
+        }
+    }
+    
+    /**
+     * Display available characters in the panel
+     */
+    displayAvailableCharacters() {
+        const characterList = this.characterPanel.querySelector('.character-list');
+        if (!characterList) return;
+        
+        // Update header with character count
+        const header = this.characterPanel.querySelector('.available-characters h4');
+        if (header) {
+            header.textContent = `Available Characters (${this.availableCharacters.length})`;
+        }
+        
+        // Get current unit to check already assigned characters
+        const unitId = this.characterPanel.dataset.unitId;
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        // Create a set of already assigned character IDs
+        const assignedIds = new Set();
+        if (unit.general) assignedIds.add(unit.general.id);
+        if (unit.soldiers) {
+            unit.soldiers.forEach(s => assignedIds.add(s.id));
+        }
+        
+        console.log('🎭 Displaying characters in panel...');
+        console.log('Available characters count:', this.availableCharacters.length);
+        console.log('Already assigned IDs:', Array.from(assignedIds));
+        
+        if (this.availableCharacters.length === 0) {
+            console.log('❌ No characters available to display');
+            characterList.innerHTML = '<div class="loading">No characters available.</div>';
+            return;
+        }
+        
+        // Build character list HTML
+        let html = '';
+        let availableCount = 0;
+        this.availableCharacters.forEach(character => {
+            // Skip if already assigned
+            if (assignedIds.has(character.id)) {
+                console.log(`⏩ Skipping already assigned character: ${character.name || character.id}`);
+                return;
+            }
+            
+            availableCount++;
+            const name = character.name || 'Unnamed Character';
+            const description = character.description ? 
+                (character.description.substring(0, 50) + (character.description.length > 50 ? '...' : '')) : 
+                'No description';
+            
+            html += `
+                <div class="character-list-item" 
+                     data-character-id="${character.id}" 
+                     data-character-name="${name}"
+                     data-character-description="${description || ''}">
+                    <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 2px;">${name}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${description}</div>
+                </div>
+            `;
+        });
+        
+        console.log('✨ Built HTML for', availableCount, 'available characters');
+        
+        if (html === '') {
+            characterList.innerHTML = '';
+        } else {
+            characterList.innerHTML = html;
+            
+            // Add click handlers to assign characters
+            characterList.querySelectorAll('.character-list-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const characterId = item.dataset.characterId;
+                    this.promptCharacterAssignment(unitId, characterId);
+                });
+            });
+        }
+    }
+    
+    /**
+     * Edit unit name inline
+     */
+    editUnitName(unitId, nameLabel) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        const currentName = unit.name;
+        
+        // Create input element
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentName;
+        input.className = 'unit-name-input';
+        input.style.cssText = `
+            background: white;
+            border: 2px solid var(--brand-primary);
+            border-radius: 3px;
+            padding: 2px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        `;
+        
+        // Replace label with input
+        nameLabel.style.display = 'none';
+        nameLabel.parentNode.insertBefore(input, nameLabel);
+        
+        // Focus and select all text
+        input.focus();
+        input.select();
+        
+        // Save function
+        const saveEdit = () => {
+            const newName = input.value.trim();
+            if (newName && newName !== currentName) {
+                // Save history for undo
+                this.saveHistory();
+                
+                // Update unit name
+                this.armyBuilder.updateUnit(unitId, { name: newName });
+                nameLabel.textContent = newName;
+            }
+            
+            // Remove input and show label
+            input.remove();
+            nameLabel.style.display = 'block';
+        };
+        
+        // Cancel function
+        const cancelEdit = () => {
+            input.remove();
+            nameLabel.style.display = 'block';
+        };
+        
+        // Event handlers
+        input.addEventListener('blur', saveEdit);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveEdit();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEdit();
             }
         });
+    }
+    
+    /**
+     * Prompt user to assign character as general or soldier
+     */
+    promptCharacterAssignment(unitId, characterId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        const character = this.availableCharacters.find(c => c.id === characterId);
+        if (!unit || !character) return;
+        
+        // Save history before assignment
+        this.saveHistory();
+        
+        // If no general, assign as general by default
+        if (!unit.general) {
+            unit.general = {
+                id: character.id,
+                name: character.name || 'Unnamed'
+            };
+        } else {
+            // Otherwise assign as soldier
+            if (!unit.soldiers) unit.soldiers = [];
+            unit.soldiers.push({
+                id: character.id,
+                name: character.name || 'Unnamed'
+            });
+        }
+        
+        // Update displays
+        this.updateCharacterPanel(unit);
+        this.updateUnitCharacterIndicators(unitId);
+        this.displayAvailableCharacters();
     }
 }
 

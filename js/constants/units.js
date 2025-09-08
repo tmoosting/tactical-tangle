@@ -10,7 +10,7 @@ export const UNIT_TYPES = {
         minSize: 20,
         maxSize: 400,
         defaultSize: 80,
-        defaultFormation: { width: 16, depth: 5 },  // Wider formation for light infantry
+        defaultFormation: { width: 10, depth: 8 },  // Less wide formation for light infantry
         color: '#8B7355',  // Tan
         icon: 'L',
         description: 'Fast, flexible skirmishers'

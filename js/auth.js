@@ -10,6 +10,10 @@ export default class AuthManager {
         this.apiPin = null;
         this.currentWorld = null;
         this.isAuthenticated = false;
+        this.storageKey = 'onlyworlds_auth';
+        
+        // Try to load existing auth from localStorage
+        this.loadFromStorage();
     }
     
     /**
@@ -64,6 +68,9 @@ export default class AuthManager {
             
             this.isAuthenticated = true;
             
+            // Save authentication to localStorage
+            this.saveToStorage();
+            
             return true;
             
         } catch (error) {
@@ -96,6 +103,9 @@ export default class AuthManager {
         this.apiPin = null;
         this.currentWorld = null;
         this.isAuthenticated = false;
+        
+        // Clear from localStorage
+        localStorage.removeItem(this.storageKey);
     }
     
     /**
@@ -104,6 +114,14 @@ export default class AuthManager {
      */
     checkAuth() {
         return this.isAuthenticated && this.apiKey && this.apiPin;
+    }
+    
+    /**
+     * Check if currently authenticated (method for compatibility)
+     * @returns {boolean} Authentication status
+     */
+    isAuthenticatedMethod() {
+        return this.checkAuth();
     }
     
     /**
@@ -139,6 +157,52 @@ export default class AuthManager {
         } catch (error) {
             console.error('Error switching world:', error);
             throw error;
+        }
+    }
+    
+    /**
+     * Save authentication data to localStorage
+     */
+    saveToStorage() {
+        try {
+            const authData = {
+                apiKey: this.apiKey,
+                apiPin: this.apiPin,
+                currentWorld: this.currentWorld,
+                isAuthenticated: this.isAuthenticated,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(this.storageKey, JSON.stringify(authData));
+        } catch (error) {
+            console.error('Failed to save auth to localStorage:', error);
+        }
+    }
+    
+    /**
+     * Load authentication data from localStorage
+     */
+    loadFromStorage() {
+        try {
+            const storedAuth = localStorage.getItem(this.storageKey);
+            if (storedAuth) {
+                const authData = JSON.parse(storedAuth);
+                
+                // Check if auth is not too old (24 hours)
+                const maxAge = 24 * 60 * 60 * 1000; // 24 hours in ms
+                if (authData.timestamp && (Date.now() - authData.timestamp) < maxAge) {
+                    this.apiKey = authData.apiKey;
+                    this.apiPin = authData.apiPin;
+                    this.currentWorld = authData.currentWorld;
+                    this.isAuthenticated = authData.isAuthenticated;
+                    console.log('🔐 Loaded authentication from localStorage');
+                } else {
+                    console.log('🕐 Stored auth expired, clearing');
+                    localStorage.removeItem(this.storageKey);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load auth from localStorage:', error);
+            localStorage.removeItem(this.storageKey);
         }
     }
 }

@@ -141,22 +141,43 @@
 /* Resize handles */
 .resize-handle {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
+    width: 12px;
+    height: 12px;
+    background: var(--bg-primary);
     border: 2px solid var(--brand-primary, #4CAF50);
-    border-radius: 2px;
+    border-radius: 3px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    z-index: 10;
 }
 
-.unit.selected .resize-handle {
+/* Show handles on hover of the wrapper */
+.unit-wrapper:hover .resize-handle {
+    opacity: 0.6;
+    transform: scale(1);
+}
+
+/* Full opacity when selected or actively resizing */
+.unit-wrapper.selected .resize-handle,
+.unit-wrapper:hover .resize-handle:hover {
     opacity: 1;
+    transform: scale(1.1);
+    background: var(--brand-primary, #4CAF50);
+    border-color: var(--bg-primary);
 }
 
-.resize-handle:hover {
+/* Dark mode specific adjustments */
+[data-theme="dark"] .resize-handle {
+    background: var(--bg-secondary);
+    border-color: var(--text-secondary);
+}
+
+[data-theme="dark"] .unit-wrapper:hover .resize-handle:hover,
+[data-theme="dark"] .unit-wrapper.selected .resize-handle {
     background: var(--brand-primary, #4CAF50);
+    border-color: var(--bg-primary);
 }
 
 .resize-handle.resize-nw {

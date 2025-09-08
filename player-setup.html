@@ -161,6 +161,62 @@
         .error-message.active {
             display: block;
         }
+        
+        /* Character Overview Styles */
+        .character-overview {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            padding: 15px;
+            background: var(--bg-secondary);
+        }
+        
+        .loading-characters {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .character-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 12px;
+        }
+        
+        .character-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .character-description {
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        
+        .no-characters {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .character-count {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -221,6 +277,14 @@
                 </small>
             </div>
             
+            <!-- Character Overview -->
+            <div class="form-section">
+                <h2>Available Characters</h2>
+                <div id="characterOverview" class="character-overview">
+                    <div class="loading-characters">Loading characters...</div>
+                </div>
+            </div>
+            
             <div id="errorMessage" class="error-message"></div>
             
             <div class="form-actions">
@@ -239,10 +303,19 @@
     
     <script type="module">
         import ThemeManager from './js/theme.js';
+        import AuthManager from './js/auth.js';
+        import OnlyWorldsAPI from './js/api.js';
         
         // Initialize theme
         const themeManager = new ThemeManager();
         themeManager.init();
+        
+        // Initialize auth and API
+        const authManager = new AuthManager();
+        const apiService = new OnlyWorldsAPI(authManager);
+        
+        // Load characters on page load
+        loadCharacters();
         
         // Form validation and navigation
         document.getElementById('setupForm').addEventListener('submit', (e) => {
@@ -324,6 +397,83 @@
             const timestamp = Date.now().toString(16);
             const random = Math.random().toString(16).substring(2, 10);
             return `${timestamp}-${random}`;
+        }
+        
+        // Load characters from API or localStorage
+        async function loadCharacters() {
+            const overview = document.getElementById('characterOverview');
+            
+            try {
+                let characters = [];
+                
+                // First try localStorage (from JSON import)
+                const storedData = localStorage.getItem('onlyworlds_import_data');
+                if (storedData) {
+                    const data = JSON.parse(storedData);
+                    if (data.elements && data.elements.Character) {
+                        characters = data.elements.Character;
+                        console.log(`📦 Loaded ${characters.length} characters from import`);
+                    }
+                }
+                
+                // If no localStorage data and authenticated, try API
+                if (characters.length === 0 && authManager.checkAuth()) {
+                    try {
+                        characters = await apiService.getElements('character');
+                        console.log(`🌐 Loaded ${characters.length} characters from API`);
+                    } catch (error) {
+                        console.error('Failed to load from API:', error);
+                    }
+                }
+                
+                displayCharacters(characters);
+                
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                overview.innerHTML = '<div class="no-characters">Failed to load characters</div>';
+            }
+        }
+        
+        // Display characters in the overview
+        function displayCharacters(characters) {
+            const overview = document.getElementById('characterOverview');
+            
+            if (characters.length === 0) {
+                overview.innerHTML = `
+                    <div class="no-characters">
+                        No characters available.<br>
+                        <small>Import OnlyWorlds JSON or connect to API with characters</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            const countText = `${characters.length} character${characters.length === 1 ? '' : 's'} available`;
+            
+            let html = `<div class="character-count">${countText}</div>`;
+            html += '<div class="character-grid">';
+            
+            characters.slice(0, 12).forEach(character => { // Show max 12 for overview
+                const name = character.name || 'Unnamed Character';
+                const description = character.description ? 
+                    (character.description.substring(0, 80) + (character.description.length > 80 ? '...' : '')) : 
+                    'No description';
+                
+                html += `
+                    <div class="character-card">
+                        <div class="character-name">${name}</div>
+                        <div class="character-description">${description}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (characters.length > 12) {
+                html += `<div style="text-align: center; margin-top: 10px; color: var(--text-secondary); font-size: 12px;">...and ${characters.length - 12} more</div>`;
+            }
+            
+            overview.innerHTML = html;
         }
         
         // Load any existing config (for back navigation)
