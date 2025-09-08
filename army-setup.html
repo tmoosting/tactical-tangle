@@ -213,7 +213,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            overflow: hidden;
+            overflow: visible;
         }
         
         .canvas-label {
@@ -441,6 +441,9 @@
         const canvasElement = document.getElementById('battlefieldCanvas');
         const unitCanvas = new UnitCanvas(canvasElement, armyBuilder);
         
+        // Connect the canvas to the builder for default spawn settings
+        armyBuilder.unitCanvas = unitCanvas;
+        
         // Initialize UI
         document.getElementById('playerName').textContent = currentArmy.playerName;
         document.getElementById('pointsMax').textContent = currentArmy.maxPoints;
@@ -497,18 +500,13 @@
         });
         
         document.getElementById('nextBtn').addEventListener('click', () => {
-            // Validate army before proceeding
-            const validation = battleConfig.validateArmy(playerIndex);
-            
+            // Check if army has units
             if (currentArmy.units.length === 0) {
                 alert('Please create at least one unit before proceeding.');
                 return;
             }
             
-            if (!validation.valid && validation.errors.some(e => e.includes('exceeds'))) {
-                alert(validation.errors.join('\n'));
-                return;
-            }
+            // No longer blocking for exceeded points
             
             // Save and proceed
             battleConfig.save();
@@ -532,7 +530,8 @@
             document.getElementById('pointsUsed').textContent = used;
             
             const bar = document.getElementById('pointsBar');
-            bar.style.width = Math.min(percentage, 100) + '%';
+            // Allow bar to go beyond 100% to show overage
+            bar.style.width = percentage + '%';
             
             // Color coding
             bar.classList.remove('warning', 'error');

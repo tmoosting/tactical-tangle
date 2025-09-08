@@ -19,6 +19,7 @@ export class ArmyBuilder {
         this.army = battleConfig.getArmy(playerId);
         this.selectedUnit = null;
         this.unitElements = new Map(); // Map unit IDs to DOM elements
+        this.unitCanvas = null; // Will be set after canvas is created
     }
     
     /**
@@ -38,18 +39,19 @@ export class ArmyBuilder {
             };
         }
         
-        // Create unit with defaults
-        const soldierCount = unitType.defaultSize;
-        const formation = unitType.defaultFormation;
+        // Use custom default settings if available, otherwise use type defaults
+        let soldierCount = unitType.defaultSize;
+        let formation = unitType.defaultFormation;
+        
+        if (this.unitCanvas && this.unitCanvas.defaultSpawnSettings[type]) {
+            const customDefaults = this.unitCanvas.defaultSpawnSettings[type];
+            soldierCount = customDefaults.soldierCount;
+            formation = customDefaults.formation;
+        }
+        
         const cost = calculateUnitCost(type, soldierCount);
         
-        // Check if adding this unit would exceed points
-        if (this.army.usedPoints + cost > this.army.maxPoints) {
-            return { 
-                success: false, 
-                error: `Not enough points (need ${cost}, have ${this.army.maxPoints - this.army.usedPoints})` 
-            };
-        }
+        // No longer blocking based on points - allow overages
         
         // Create the unit
         const unit = {
@@ -92,14 +94,7 @@ export class ArmyBuilder {
             
             updates.cost = calculateUnitCost(unit.type, updates.soldierCount);
             
-            // Check if new cost exceeds points
-            const newTotalPoints = this.army.usedPoints - unit.cost + updates.cost;
-            if (newTotalPoints > this.army.maxPoints) {
-                return { 
-                    success: false, 
-                    error: `Exceeds point limit (${newTotalPoints}/${this.army.maxPoints})` 
-                };
-            }
+            // No longer blocking based on points - allow overages
             
             // Update formation if needed
             if (!updates.formation) {

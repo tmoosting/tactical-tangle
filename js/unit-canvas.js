@@ -12,8 +12,10 @@ export class UnitCanvas {
         this.selectedUnit = null;
         this.dragState = null;
         this.resizeState = null;
+        this.defaultSpawnSettings = {}; // Store default spawn settings per unit type
         
         this.initEventListeners();
+        this.initKeyboardListeners();
     }
     
     /**
@@ -23,34 +25,51 @@ export class UnitCanvas {
         const unitType = UNIT_TYPES[unit.type];
         const size = getUnitVisualSize(unit.formation);
         
+        // Create wrapper element that won't be clipped
+        const wrapper = document.createElement('div');
+        wrapper.className = 'unit-wrapper';
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = unit.position.x + 'px';
+        wrapper.style.top = unit.position.y + 'px';
+        wrapper.style.width = size.width + 'px';
+        wrapper.style.height = size.height + 'px';
+        wrapper.dataset.unitId = unit.id;
+        
+        // Create the actual unit element with shape
         const element = document.createElement('div');
         element.className = `unit unit-${unit.type}`;
-        element.dataset.unitId = unit.id;
+        element.style.width = '100%';
+        element.style.height = '100%';
+        element.style.position = 'relative';
         
-        // Set position and size
-        element.style.left = unit.position.x + 'px';
-        element.style.top = unit.position.y + 'px';
-        element.style.width = size.width + 'px';
-        element.style.height = size.height + 'px';
-        element.style.background = unitType.color;
+        // Set background and shape
+        this.applyUnitShape(element, unit.type);
         
-        // Add unit info
-        const info = document.createElement('div');
-        info.className = 'unit-info';
-        info.innerHTML = `
-            <div class="unit-name">${unit.name}</div>
-            <div class="unit-soldiers">${unit.soldierCount} soldiers</div>
-            <div class="unit-cost">${unit.cost} pts</div>
-        `;
-        element.appendChild(info);
+        // Add soldier count inside the unit
+        const soldierCount = document.createElement('div');
+        soldierCount.className = 'unit-soldier-count';
+        soldierCount.textContent = unit.soldierCount;
+        element.appendChild(soldierCount);
         
-        // Add resize handles
-        this.addResizeHandles(element);
+        // Add unit name below the wrapper (outside clip-path)
+        const nameLabel = document.createElement('div');
+        nameLabel.className = 'unit-name-label';
+        nameLabel.textContent = unit.name;
         
-        // Store reference
-        this.armyBuilder.unitElements.set(unit.id, element);
+        // Add resize handles to wrapper
+        this.addResizeHandles(wrapper);
         
-        return element;
+        // Add icon buttons to wrapper
+        this.addIconButtons(wrapper, unit);
+        
+        // Assemble the structure
+        wrapper.appendChild(element);
+        wrapper.appendChild(nameLabel);
+        
+        // Store reference to wrapper
+        this.armyBuilder.unitElements.set(unit.id, wrapper);
+        
+        return wrapper;
     }
     
     /**
@@ -76,9 +95,9 @@ export class UnitCanvas {
             oldElement.remove();
         }
         
-        // Create and add new element
-        const element = this.createUnitElement(unit);
-        this.canvas.appendChild(element);
+        // Create and add new wrapper element
+        const wrapper = this.createUnitElement(unit);
+        this.canvas.appendChild(wrapper);
     }
     
     /**
@@ -102,25 +121,33 @@ export class UnitCanvas {
         const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
         if (!unit) return;
         
-        const element = this.armyBuilder.unitElements.get(unitId);
-        if (!element) return;
+        const wrapper = this.armyBuilder.unitElements.get(unitId);
+        if (!wrapper) return;
         
         const size = getUnitVisualSize(unit.formation);
         
-        // Update position and size
-        element.style.left = unit.position.x + 'px';
-        element.style.top = unit.position.y + 'px';
-        element.style.width = size.width + 'px';
-        element.style.height = size.height + 'px';
+        // Update wrapper position and size
+        wrapper.style.left = unit.position.x + 'px';
+        wrapper.style.top = unit.position.y + 'px';
+        wrapper.style.width = size.width + 'px';
+        wrapper.style.height = size.height + 'px';
         
-        // Update info
-        const info = element.querySelector('.unit-info');
-        if (info) {
-            info.innerHTML = `
-                <div class="unit-name">${unit.name}</div>
-                <div class="unit-soldiers">${unit.soldierCount} soldiers</div>
-                <div class="unit-cost">${unit.cost} pts</div>
-            `;
+        // Reapply shape to inner unit element
+        const unitElement = wrapper.querySelector('.unit');
+        if (unitElement) {
+            this.applyUnitShape(unitElement, unit.type);
+        }
+        
+        // Update soldier count
+        const soldierCount = wrapper.querySelector('.unit-soldier-count');
+        if (soldierCount) {
+            soldierCount.textContent = unit.soldierCount;
+        }
+        
+        // Update name label
+        const nameLabel = wrapper.querySelector('.unit-name-label');
+        if (nameLabel) {
+            nameLabel.textContent = unit.name;
         }
     }
     
@@ -128,20 +155,28 @@ export class UnitCanvas {
      * Select a unit
      */
     selectUnit(unitId) {
-        // Deselect previous
+        // Hide previous unit's buttons
         if (this.selectedUnit) {
             const prevElement = this.armyBuilder.unitElements.get(this.selectedUnit);
             if (prevElement) {
                 prevElement.classList.remove('selected');
+                const buttons = prevElement.querySelector('.unit-icon-buttons');
+                if (buttons) {
+                    buttons.style.display = 'none';
+                }
             }
         }
         
-        // Select new
+        // Select new unit and show buttons
         this.selectedUnit = unitId;
         if (unitId) {
             const element = this.armyBuilder.unitElements.get(unitId);
             if (element) {
                 element.classList.add('selected');
+                const buttons = element.querySelector('.unit-icon-buttons');
+                if (buttons) {
+                    buttons.style.display = 'flex';
+                }
             }
         }
     }
@@ -152,15 +187,15 @@ export class UnitCanvas {
     initEventListeners() {
         // Unit selection and drag start
         this.canvas.addEventListener('mousedown', (e) => {
-            const unitElement = e.target.closest('.unit');
+            const unitWrapper = e.target.closest('.unit-wrapper');
             const resizeHandle = e.target.closest('.resize-handle');
             
-            if (resizeHandle && unitElement) {
+            if (resizeHandle && unitWrapper) {
                 // Start resize
-                this.startResize(e, unitElement, resizeHandle);
-            } else if (unitElement) {
+                this.startResize(e, unitWrapper, resizeHandle);
+            } else if (unitWrapper) {
                 // Start drag
-                this.startDrag(e, unitElement);
+                this.startDrag(e, unitWrapper);
             } else {
                 // Deselect
                 this.selectUnit(null);
@@ -196,28 +231,28 @@ export class UnitCanvas {
     /**
      * Start dragging a unit
      */
-    startDrag(e, unitElement) {
-        const unitId = unitElement.dataset.unitId;
+    startDrag(e, wrapperElement) {
+        const unitId = wrapperElement.dataset.unitId;
         this.selectUnit(unitId);
         
-        const rect = unitElement.getBoundingClientRect();
+        const rect = wrapperElement.getBoundingClientRect();
         const canvasRect = this.canvas.getBoundingClientRect();
         
         this.dragState = {
             unitId: unitId,
-            element: unitElement,
+            element: wrapperElement,
             offsetX: e.clientX - rect.left,
             offsetY: e.clientY - rect.top,
             canvasLeft: canvasRect.left,
             canvasTop: canvasRect.top,
             originalPosition: {
-                x: parseInt(unitElement.style.left),
-                y: parseInt(unitElement.style.top)
+                x: parseInt(wrapperElement.style.left),
+                y: parseInt(wrapperElement.style.top)
             }
         };
         
-        unitElement.style.cursor = 'grabbing';
-        unitElement.style.zIndex = '1000';
+        wrapperElement.style.cursor = 'grabbing';
+        wrapperElement.style.zIndex = '1000';
     }
     
     /**
@@ -367,9 +402,9 @@ export class UnitCanvas {
             const newFormationDepth = Math.max(1, Math.round(newHeight / 10));
             const newSoldierCount = newFormationWidth * newFormationDepth;
             
-            const info = this.resizeState.element.querySelector('.unit-soldiers');
-            if (info) {
-                info.textContent = `${newSoldierCount} soldiers`;
+            const soldierCount = this.resizeState.element.querySelector('.unit-soldier-count');
+            if (soldierCount) {
+                soldierCount.textContent = newSoldierCount;
             }
         }
     }
@@ -412,6 +447,163 @@ export class UnitCanvas {
         }
         
         this.resizeState = null;
+    }
+    
+    /**
+     * Apply unit shape (pentagon for cavalry, hexagon for light infantry)
+     */
+    applyUnitShape(element, type) {
+        const unitType = UNIT_TYPES[type];
+        
+        // Set background color
+        element.style.background = unitType.color;
+        
+        // Apply clip-path for non-rectangular shapes
+        if (type === 'cavalry') {
+            // Pentagon shape
+            element.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
+        } else if (type === 'light') {
+            // Hexagon shape  
+            element.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+        } else {
+            // Rectangle for hoplites - no clip-path
+            element.style.clipPath = '';
+        }
+    }
+    
+    /**
+     * Add icon buttons to selected unit
+     */
+    addIconButtons(element, unit) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'unit-icon-buttons';
+        buttonContainer.style.display = 'none';
+        
+        // Copy shape button
+        const copyShapeBtn = document.createElement('button');
+        copyShapeBtn.className = 'unit-icon-btn copy-shape';
+        copyShapeBtn.innerHTML = '⬚';
+        copyShapeBtn.title = 'Copy shape to all units of this type';
+        copyShapeBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.copyShapeToAllOfType(unit.id);
+        };
+        
+        // Align button
+        const alignBtn = document.createElement('button');
+        alignBtn.className = 'unit-icon-btn align-right';
+        alignBtn.innerHTML = '⇥';
+        alignBtn.title = 'Align all units of this type to the right';
+        alignBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.alignUnitsToRight(unit.id);
+        };
+        
+        // Set default button
+        const setDefaultBtn = document.createElement('button');
+        setDefaultBtn.className = 'unit-icon-btn set-default';
+        setDefaultBtn.innerHTML = '★';
+        setDefaultBtn.title = 'Set as default spawn shape';
+        setDefaultBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.setDefaultSpawnShape(unit.id, e.target);
+        };
+        
+        buttonContainer.appendChild(copyShapeBtn);
+        buttonContainer.appendChild(alignBtn);
+        buttonContainer.appendChild(setDefaultBtn);
+        element.appendChild(buttonContainer);
+    }
+    
+    /**
+     * Copy shape to all units of the same type
+     */
+    copyShapeToAllOfType(unitId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        const targetFormation = { ...unit.formation };
+        const targetSoldierCount = unit.soldierCount;
+        
+        for (const otherUnit of this.armyBuilder.army.units) {
+            if (otherUnit.type === unit.type && otherUnit.id !== unit.id) {
+                const result = this.armyBuilder.updateUnit(otherUnit.id, {
+                    soldierCount: targetSoldierCount,
+                    formation: { ...targetFormation }
+                });
+                
+                if (result.success) {
+                    this.updateUnitElement(otherUnit.id);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Align all units of the same type to the right of the selected unit
+     */
+    alignUnitsToRight(unitId) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        const unitSize = getUnitVisualSize(unit.formation);
+        let currentX = unit.position.x + unitSize.width + 20; // 20px spacing
+        const y = unit.position.y;
+        
+        for (const otherUnit of this.armyBuilder.army.units) {
+            if (otherUnit.type === unit.type && otherUnit.id !== unit.id) {
+                const validation = this.armyBuilder.validatePlacement(otherUnit.id, { x: currentX, y: y });
+                
+                if (validation.valid) {
+                    this.armyBuilder.updateUnit(otherUnit.id, {
+                        position: { x: currentX, y: y }
+                    });
+                    this.updateUnitElement(otherUnit.id);
+                    
+                    const otherSize = getUnitVisualSize(otherUnit.formation);
+                    currentX += otherSize.width + 20;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Set this unit's shape as the default for spawning
+     */
+    setDefaultSpawnShape(unitId, btn) {
+        const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        if (!unit) return;
+        
+        this.defaultSpawnSettings[unit.type] = {
+            formation: { ...unit.formation },
+            soldierCount: unit.soldierCount
+        };
+        
+        // Visual feedback
+        btn.style.color = 'gold';
+        setTimeout(() => {
+            btn.style.color = '';
+        }, 1000);
+    }
+    
+    /**
+     * Initialize keyboard event listeners
+     */
+    initKeyboardListeners() {
+        document.addEventListener('keydown', (e) => {
+            // Delete key - remove selected unit
+            if (e.key === 'Delete' && this.selectedUnit && !this.dragState && !this.resizeState) {
+                const result = this.armyBuilder.removeUnit(this.selectedUnit);
+                if (result.success) {
+                    this.selectedUnit = null;
+                }
+            }
+            
+            // Escape key - deselect unit
+            if (e.key === 'Escape') {
+                this.selectUnit(null);
+            }
+        });
     }
 }
 
