@@ -37,7 +37,7 @@ Then open http://localhost:8080
 - **Character Assignment** - Assign OnlyWorlds characters as generals or soldiers
 - **Export/Import** - Save and share army configurations as JSON
 
-### New Features (September 2025)
+### Latest Enhancements (September 2025)
 - **Unit Shapes** - Hexagon (light infantry), Pentagon (cavalry), Rectangle (hoplites)
 - **Smart Controls** - Icon buttons on selected units:
   - Copy shape to all units of same type
@@ -48,6 +48,12 @@ Then open http://localhost:8080
   - `ESC` - Deselect current unit
 - **Flexible Points** - Can exceed point limits (visual warning)
 - **Improved Labels** - Soldier count inside units, names below
+- **Centered Spawning** - Units now spawn in battlefield center instead of corner
+- **Character Tooltips** - Hover over badges to see general/soldier names
+- **Inline Name Editing** - Click unit names to edit them directly
+- **Player Intelligence** - Player 2 can see Player 1's army point total
+- **Enhanced Character Management** - Improved assignment/unassignment flow
+- **Authentication Persistence** - Credentials saved across page navigation
 
 ## 🛠️ Technology
 

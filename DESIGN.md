@@ -84,6 +84,14 @@ Reusing from the existing OnlyWorlds template tool:
 - **World ID**: Default to specific world (TBD) for showcase
 - **UUIDv7 generation**: For any new elements created
 
+### Authentication Architecture (Enhanced)
+The authentication system now features persistent session management:
+- **localStorage Persistence**: Credentials saved with 24-hour expiration
+- **Cross-page Consistency**: Auth state maintained during navigation
+- **Graceful Degradation**: Falls back to localStorage imports when API unavailable
+- **Global Access**: `window.authManager` and `window.apiService` for component access
+- **Timestamp Security**: Automatic credential expiration prevents stale sessions
+
 ### Data Flow
 1. **Setup Phase**: Army composition (Current Focus)
    - Player configuration (names, point limits, circumstances)
@@ -329,19 +337,30 @@ Implementation broken into 4 milestones:
 6. ✅ Keyboard shortcuts (Delete, ESC)
 **Delivered**: Spawn, drag, resize units with smart controls
 
-#### Milestone 3: Character Integration (Ready to Start)
-1. ⏳ Load OnlyWorlds characters via API
-2. ⏳ Create unit detail panel for configuration
-3. ⏳ Implement character selector with search
-4. ⏳ Update unit display with assignments
-**Next Deliverable**: Assign characters to units
+#### Milestone 3: Character Integration (COMPLETED ✅)
+1. ✅ Load OnlyWorlds characters via API and localStorage
+2. ✅ Create unit detail panel for configuration
+3. ✅ Implement character selector with search
+4. ✅ Update unit display with assignments and tooltips
+5. ✅ Authentication persistence across pages
+6. ✅ Character overview in player setup
+**Delivered**: Full character assignment system with enhanced UX
 
-#### Milestone 4: Polish & Export (Partially Done)
+#### Milestone 4: Polish & Export (COMPLETED ✅)
 1. ✅ Points tracking with flexible limits
-2. ⏳ Army export/import as JSON
-3. ✅ Visual polish (shapes, labels, colors)
-4. ⏳ Battle handoff preparation
-**Status**: Core polish done, export pending
+2. ✅ Army export/import as JSON (available from main menu)
+3. ✅ Visual polish (shapes, labels, colors, centered spawning)
+4. ✅ Enhanced UI/UX (inline editing, player intelligence, tooltips)
+**Status**: Comprehensive polish and feature completion
+
+#### Milestone 5: Advanced UX (NEW - COMPLETED ✅)
+1. ✅ Centered unit spawning system
+2. ✅ Inline unit name editing
+3. ✅ Player 2 strategic intelligence (P1 army points)
+4. ✅ Enhanced character tooltips with names
+5. ✅ Improved unit proportions (light infantry)
+6. ✅ Character unassignment bug fixes
+**Delivered**: Professional-grade user experience
 
 ### Phase 2: Battle Simulation (Future)
 1. LittleJS + Matter.js physics setup
