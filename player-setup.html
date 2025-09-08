@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Tangle - Battle Setup</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .setup-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .setup-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .setup-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        .setup-form {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-primary);
+            padding-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        .player-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-primary);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--brand-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--brand-primary-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+        
+        .error-message {
+            color: var(--status-error);
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--status-error-bg);
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .error-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>⚔️ Prepare for Battle</h1>
+            <p>Configure your ancient Greek warfare simulation</p>
+        </div>
+        
+        <form class="setup-form" id="setupForm">
+            <!-- Battle Settings -->
+            <div class="form-section">
+                <h2>Battle Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="battleName">Battle Name</label>
+                    <input type="text" id="battleName" placeholder="Battle of Marathon" maxlength="50">
+                    <small>Optional: Give your battle a memorable name</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="circumstances">Circumstances of Battle</label>
+                    <textarea id="circumstances" placeholder="Dawn attack on the Persian camp after a long march through the mountains..."></textarea>
+                    <small>Describe the context and conditions of this engagement</small>
+                </div>
+            </div>
+            
+            <!-- Player Settings -->
+            <div class="form-section">
+                <h2>Army Commanders</h2>
+                
+                <div class="player-inputs">
+                    <div class="form-group">
+                        <label for="player1Name">Player 1 Name</label>
+                        <input type="text" id="player1Name" placeholder="Alexander" required maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player1Points">Army Points</label>
+                        <input type="number" id="player1Points" value="1000" min="200" max="5000" step="100" required>
+                    </div>
+                </div>
+                
+                <div class="player-inputs">
+                    <div class="form-group">
+                        <label for="player2Name">Player 2 Name</label>
+                        <input type="text" id="player2Name" placeholder="Darius" required maxlength="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="player2Points">Army Points</label>
+                        <input type="number" id="player2Points" value="1000" min="200" max="5000" step="100" required>
+                    </div>
+                </div>
+                
+                <small style="display: block; margin-top: 10px;">
+                    Each point buys soldiers: Light Infantry (1pt), Hoplites (2pt), Cavalry (4pt)
+                </small>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="backBtn">
+                    <span class="material-icons-outlined">arrow_back</span>
+                    Back to Menu
+                </button>
+                
+                <button type="submit" class="btn btn-primary">
+                    Start Army Setup
+                    <span class="material-icons-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script type="module">
+        // Form validation and navigation
+        document.getElementById('setupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.classList.remove('active');
+            
+            // Get form values
+            const battleName = document.getElementById('battleName').value || 'Unnamed Battle';
+            const circumstances = document.getElementById('circumstances').value || '';
+            const player1Name = document.getElementById('player1Name').value.trim();
+            const player2Name = document.getElementById('player2Name').value.trim();
+            const player1Points = parseInt(document.getElementById('player1Points').value);
+            const player2Points = parseInt(document.getElementById('player2Points').value);
+            
+            // Validation
+            if (!player1Name || !player2Name) {
+                errorMsg.textContent = 'Both player names are required';
+                errorMsg.classList.add('active');
+                return;
+            }
+            
+            if (player1Name === player2Name) {
+                errorMsg.textContent = 'Player names must be different';
+                errorMsg.classList.add('active');
+                return;
+            }
+            
+            if (player1Points < 200 || player1Points > 5000 || 
+                player2Points < 200 || player2Points > 5000) {
+                errorMsg.textContent = 'Army points must be between 200 and 5000';
+                errorMsg.classList.add('active');
+                return;
+            }
+            
+            // Create battle configuration
+            const battleConfig = {
+                id: generateId(),
+                name: battleName,
+                circumstances: circumstances,
+                players: [
+                    { name: player1Name, maxPoints: player1Points },
+                    { name: player2Name, maxPoints: player2Points }
+                ],
+                armies: [
+                    {
+                        playerId: 0,
+                        playerName: player1Name,
+                        maxPoints: player1Points,
+                        usedPoints: 0,
+                        units: []
+                    },
+                    {
+                        playerId: 1,
+                        playerName: player2Name,
+                        maxPoints: player2Points,
+                        usedPoints: 0,
+                        units: []
+                    }
+                ],
+                created_at: new Date().toISOString()
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('battleConfig', JSON.stringify(battleConfig));
+            
+            // Navigate to army setup for player 1
+            window.location.href = 'army-setup.html?player=1';
+        });
+        
+        // Back button
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+        
+        // Simple ID generator (simplified version of API's generateId)
+        function generateId() {
+            const timestamp = Date.now().toString(16);
+            const random = Math.random().toString(16).substring(2, 10);
+            return `${timestamp}-${random}`;
+        }
+        
+        // Load any existing config (for back navigation)
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedConfig = localStorage.getItem('battleConfig');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    document.getElementById('battleName').value = config.name || '';
+                    document.getElementById('circumstances').value = config.circumstances || '';
+                    if (config.players && config.players.length === 2) {
+                        document.getElementById('player1Name').value = config.players[0].name;
+                        document.getElementById('player1Points').value = config.players[0].maxPoints;
+                        document.getElementById('player2Name').value = config.players[1].name;
+                        document.getElementById('player2Points').value = config.players[1].maxPoints;
+                    }
+                } catch (e) {
+                    console.log('No valid saved config');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

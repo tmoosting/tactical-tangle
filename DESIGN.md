@@ -11,7 +11,14 @@ A lightweight ancient Greek warfare simulation demonstrating OnlyWorlds characte
 
 ## Technical Stack
 
-### Frontend Framework: LittleJS + Matter.js
+### Current: Army Setup Phase
+- **Vanilla JavaScript**: No framework dependencies
+- **DOM-based Canvas**: HTML elements for drag and drop
+- **CSS Styling**: Visual unit representation
+- **LocalStorage**: State persistence between pages
+- **Existing Template Code**: Auth, API, import-export
+
+### Future: Battle Simulation
 - **LittleJS**: Ultra-lightweight game engine (no dependencies, handles 100k+ sprites at 60fps)
 - **Matter.js**: Physics engine (~87KB) providing:
   - Collision detection with categories/masks for unit types
@@ -36,49 +43,37 @@ A lightweight ancient Greek warfare simulation demonstrating OnlyWorlds characte
 
 ## Architecture
 
-### Core Components
+### Current Implementation
 ```
 tactical-tangle/
-├── index.html              # Main game page
-├── setup.html              # Army setup and assignment screen
+├── index.html              # Authentication & main menu
+├── player-setup.html       # Battle configuration screen
+├── army-setup.html         # Army builder interface
 ├── js/
-│   ├── game.js            # Core game loop & initialization
-│   ├── battlefield.js      # Battlefield rendering & grid
-│   ├── physics.js         # Matter.js setup & configuration
-│   ├── setup/
-│   │   ├── army-builder.js # Army composition interface
-│   │   ├── positioning.js  # Unit placement on field
-│   │   └── assignment.js   # Character-to-unit assignment
-│   ├── units/
-│   │   ├── manager.js     # Unit spawning & management
-│   │   ├── block.js       # Unit block base class
-│   │   ├── hoplite.js     # Heavy infantry behavior
-│   │   ├── peltast.js     # Light infantry behavior
-│   │   └── cavalry.js     # Cavalry behavior
-│   ├── ai/
-│   │   ├── orchestrator.js # Battle flow controller
-│   │   ├── general.js     # Character decision-making
-│   │   ├── unit-agent.js  # Unit block AI (middle layer)
-│   │   ├── masses.js      # Non-character soldier AI
-│   │   └── thread-manager.js # OpenAI thread handling
-│   └── onlyworlds/
-│       ├── api.js         # Template API integration
-│       ├── loader.js      # World/character loading
-│       ├── character.js   # Character field mapping
-│       └── import.js      # JSON import functionality
-├── config/
-│   ├── prompts/
-│   │   ├── orchestrator.txt
-│   │   ├── general.txt
-│   │   ├── unit-agent.txt
-│   │   └── masses.txt
-│   ├── battle.json        # Battle configurations
-│   └── knowledge/         # Greek warfare knowledge base
-│       ├── hoplite-warfare.txt
-│       ├── formations.txt
-│       └── tactics.txt
+│   ├── auth.js            # (From template) API authentication
+│   ├── api.js             # (From template) OnlyWorlds API
+│   ├── import-export.js   # (From template) JSON handling
+│   ├── battle-config.js   # Battle state management
+│   ├── army-builder.js    # Unit creation and management
+│   ├── unit-canvas.js     # Drag/drop positioning
+│   └── constants/
+│       └── units.js       # Unit types, costs, limits
+├── css/
+│   └── styles.css         # (From template) Base styles
+│   └── army-setup.css     # Army builder specific styles
 └── assets/
-    └── styles.css         # Minimal styling
+    └── (empty for now)    # Future: icons, sounds
+
+### Future Architecture
+├── battle.html            # Battle simulation page
+├── js/
+│   ├── game.js           # Core game loop
+│   ├── physics.js        # Matter.js integration
+│   ├── ai/
+│   │   ├── general.js    # Character AI
+│   │   └── unit-ai.js    # Unit behavior
+│   └── config/
+│       └── prompts/      # LLM prompts
 ```
 
 ### Template Tool Integration
@@ -90,18 +85,20 @@ Reusing from the existing OnlyWorlds template tool:
 - **UUIDv7 generation**: For any new elements created
 
 ### Data Flow
-1. **Setup Phase**: Army composition screen
-   - Load OnlyWorlds data via API or JSON import
-   - Create army blocks with size/type selection
-   - Assign characters to general/officer roles
-   - Position blocks on battlefield grid
-   - Track character positions within blocks (front/middle/back, left/center/right)
+1. **Setup Phase**: Army composition (Current Focus)
+   - Player configuration (names, point limits, circumstances)
+   - Load OnlyWorlds characters via API or JSON import
+   - Create units with point costs
+   - Drag to position on battlefield canvas
+   - Resize units to adjust soldier count
+   - Assign characters as generals or soldiers
+   - Export/import army configurations
 
-2. **Battle Phase**: Physics simulation
-   - Initialize Matter.js bodies for each block
+2. **Battle Phase**: Physics simulation (Future)
+   - Initialize Matter.js bodies for each unit
    - Run 60fps physics simulation
-   - Process LLM decisions asynchronously
-   - Display dialogue and events in battle log
+   - Process AI decisions (initially without LLM)
+   - Display combat results
 
 ## Game Design
 
@@ -122,12 +119,12 @@ Reusing from the existing OnlyWorlds template tool:
   - Top: Phase indicator and controls
 
 ### Unit Terminology
-- **Block**: A formation of soldiers (10-300 men)
-- **Unit Type**: Hoplite, Peltast, or Cavalry
-- **Army**: Collection of blocks (typically 3-10 blocks)
-- **General**: Character commanding whole army
-- **Officer**: Character leading individual block
-- **Soldiers**: Non-character fighters in blocks
+- **Unit**: A formation of soldiers (20-800 men)
+- **Unit Type**: Light Infantry, Hoplite, or Cavalry
+- **Army**: Collection of units (max 40 units, 1000 points default)
+- **General**: Character commanding a unit (max 1 per unit)
+- **Soldiers**: Mix of OnlyWorlds characters and anonymous fighters
+- **Hierarchy**: Numeric rank (1-40) for general command priority
 
 ### Battle Mechanics
 - **Movement**: Matter.js forces for directional movement
@@ -311,42 +308,56 @@ const importManager = new ImportExportManager(api);
 const worldData = await importManager.importJSON(file);
 ```
 
-## Development Phases (Revised Order)
+## Development Phases (Updated)
 
-### Phase 1: Foundation & Setup (Week 1)
-1. Fork latest template tool, configure repository
-2. Create army setup UI with block builder
-3. Implement character assignment interface
-4. Add battlefield positioning system
-5. **Deliverable**: Working setup screen with army composition
+### Phase 1: Army Setup UI (Current - 13-18 hours)
+Implementation broken into 4 milestones:
 
-### Phase 2: OnlyWorlds Integration (Week 2)
-1. Integrate API client from template
-2. Add JSON import capability
-3. Character loading and display cards
-4. Assignment system with position tracking
-5. **Deliverable**: OnlyWorlds data in army builder
+#### Milestone 1: Foundation (4-6 hours)
+1. Create player-setup.html with battle configuration
+2. Create battle-config.js service for state management
+3. Create army-setup.html skeleton with navigation
+4. Wire up page flow with URL parameters
+**Deliverable**: Navigate between pages with state preserved
 
-### Phase 3: LLM Infrastructure (Week 3)
-1. OpenAI Responses API setup
-2. Thread manager implementation
-3. Batch call queue system
-4. Token rating integration (from parse tool)
-5. **Deliverable**: Working LLM communication
+#### Milestone 2: Unit System (4-5 hours)
+1. Create unit constants (types, costs, limits)
+2. Implement army-builder.js with unit logic
+3. Create unit-canvas.js for drag/drop positioning
+4. Style units with CSS (colored rectangles)
+**Deliverable**: Spawn, drag, and resize unit blocks
 
-### Phase 4: Battlefield & Movement (Week 4)
-1. Matter.js physics initialization
-2. Block movement and formations
-3. Collision detection and combat
-4. Morale and rout mechanics
-5. **Deliverable**: Playable battles
+#### Milestone 3: Character Integration (3-4 hours)
+1. Load OnlyWorlds characters via API
+2. Create unit detail panel for configuration
+3. Implement character selector with search
+4. Update unit display with assignments
+**Deliverable**: Assign characters to units
 
-### Phase 5: Polish & Documentation (Week 5)
-1. Battle log and dialogue display
-2. Visual improvements
-3. Screenshot capture points
-4. "My First Tool" guide writing
-5. **Deliverable**: Showcase-ready tool
+#### Milestone 4: Polish & Export (2-3 hours)
+1. Points tracking and validation
+2. Army export/import as JSON
+3. Visual polish and error handling
+4. Battle handoff preparation
+**Deliverable**: Complete army builder
+
+### Phase 2: Battle Simulation (Future)
+1. LittleJS + Matter.js physics setup
+2. Unit movement and formations
+3. Combat mechanics and collisions
+4. Basic AI without LLM
+
+### Phase 3: LLM Integration (Future)
+1. OpenAI API integration
+2. Character personality-driven decisions
+3. Battle dialogue and events
+4. Thread management system
+
+### Phase 4: Polish & Documentation (Future)
+1. Visual improvements
+2. Sound effects
+3. Tutorial mode
+4. Complete "My First Tool" guide
 
 ## Historical Accuracy
 

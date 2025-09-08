@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Tangle - Army Builder</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/army-setup.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+        
+        .army-builder {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Left Sidebar - Unit Controls */
+        .unit-controls {
+            width: 280px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-primary);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .army-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--border-primary);
+            background: var(--brand-secondary);
+            color: white;
+        }
+        
+        .army-header h2 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+        }
+        
+        .army-header .player-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .points-tracker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .points-used {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .points-limit {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .points-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .points-fill {
+            height: 100%;
+            background: var(--brand-primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .points-fill.warning {
+            background: var(--status-warning);
+        }
+        
+        .points-fill.error {
+            background: var(--status-error);
+        }
+        
+        .unit-spawner {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .unit-spawner h3 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        
+        .spawn-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .spawn-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .spawn-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--brand-primary);
+        }
+        
+        .spawn-btn .unit-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .unit-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .unit-icon.light { background: #8B7355; }
+        .unit-icon.hoplite { background: #CD7F32; }
+        .unit-icon.cavalry { background: #654321; }
+        
+        .unit-details {
+            text-align: left;
+        }
+        
+        .unit-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .unit-cost {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .spawn-plus {
+            font-size: 24px;
+            color: var(--brand-primary);
+        }
+        
+        .unit-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .unit-list h3 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        
+        .unit-count {
+            color: var(--text-primary);
+            font-weight: normal;
+        }
+        
+        .empty-units {
+            text-align: center;
+            color: var(--text-tertiary);
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        
+        /* Main Canvas Area */
+        .battlefield-container {
+            flex: 1;
+            position: relative;
+            background: #f0e6d2;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .battlefield-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+        
+        .canvas-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        /* Bottom Navigation */
+        .nav-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: var(--bg-primary);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+        
+        .btn-primary {
+            background: var(--brand-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--brand-primary-hover);
+        }
+        
+        .btn-primary:disabled {
+            background: var(--text-tertiary);
+            cursor: not-allowed;
+        }
+        
+        /* Right Panel - Unit Details (Hidden by default) */
+        .unit-detail-panel {
+            width: 320px;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--border-primary);
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .unit-detail-panel.active {
+            display: flex;
+        }
+        
+        /* Placeholder styles for units on canvas */
+        .unit {
+            position: absolute;
+            border: 2px solid rgba(0,0,0,0.3);
+            border-radius: 4px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+        
+        .unit:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .unit.selected {
+            border-color: var(--brand-primary);
+            border-width: 3px;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        
+        .unit.light { background: #8B7355; }
+        .unit.hoplite { background: #CD7F32; }
+        .unit.cavalry { background: #654321; }
+    </style>
+</head>
+<body>
+    <div class="army-builder">
+        <!-- Left Sidebar -->
+        <div class="unit-controls">
+            <div class="army-header">
+                <h2>Army Builder</h2>
+                <div class="player-name" id="playerName">Loading...</div>
+                <div class="points-tracker">
+                    <div>
+                        <div class="points-used">
+                            <span id="pointsUsed">0</span> / <span id="pointsMax">1000</span> pts
+                        </div>
+                        <div class="points-bar">
+                            <div class="points-fill" id="pointsBar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="unit-spawner">
+                <h3>Create Units</h3>
+                <div class="spawn-buttons">
+                    <div class="spawn-btn" data-type="light">
+                        <div class="unit-info">
+                            <div class="unit-icon light">L</div>
+                            <div class="unit-details">
+                                <div class="unit-name">Light Infantry</div>
+                                <div class="unit-cost">1 pt per soldier • 80 default</div>
+                            </div>
+                        </div>
+                        <div class="spawn-plus">+</div>
+                    </div>
+                    
+                    <div class="spawn-btn" data-type="hoplite">
+                        <div class="unit-info">
+                            <div class="unit-icon hoplite">H</div>
+                            <div class="unit-details">
+                                <div class="unit-name">Hoplite</div>
+                                <div class="unit-cost">2 pts per soldier • 120 default</div>
+                            </div>
+                        </div>
+                        <div class="spawn-plus">+</div>
+                    </div>
+                    
+                    <div class="spawn-btn" data-type="cavalry">
+                        <div class="unit-info">
+                            <div class="unit-icon cavalry">C</div>
+                            <div class="unit-details">
+                                <div class="unit-name">Cavalry</div>
+                                <div class="unit-cost">4 pts per soldier • 60 default</div>
+                            </div>
+                        </div>
+                        <div class="spawn-plus">+</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="unit-list">
+                <h3>Your Units <span class="unit-count" id="unitCount">(0/40)</span></h3>
+                <div id="unitListContent">
+                    <div class="empty-units">No units created yet. Click the + buttons above to spawn units.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Canvas -->
+        <div class="battlefield-container">
+            <div class="canvas-label" id="canvasLabel">Position Your Army</div>
+            <div class="battlefield-canvas" id="battlefieldCanvas">
+                <!-- Units will be added here -->
+            </div>
+            
+            <!-- Navigation Controls -->
+            <div class="nav-controls">
+                <button class="btn btn-secondary" id="backBtn">
+                    <span class="material-icons-outlined">arrow_back</span>
+                    Back
+                </button>
+                
+                <button class="btn btn-secondary" id="clearBtn">
+                    <span class="material-icons-outlined">clear</span>
+                    Clear Army
+                </button>
+                
+                <button class="btn btn-primary" id="nextBtn">
+                    Next Player
+                    <span class="material-icons-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Right Panel (Unit Details) - Hidden for now -->
+        <div class="unit-detail-panel" id="unitDetailPanel">
+            <!-- Unit configuration will go here -->
+        </div>
+    </div>
+    
+    <script type="module">
+        import battleConfig from './js/battle-config.js';
+        import ArmyBuilder from './js/army-builder.js';
+        import UnitCanvas from './js/unit-canvas.js';
+        
+        // Get current player from URL
+        const params = new URLSearchParams(window.location.search);
+        const currentPlayer = parseInt(params.get('player')) || 1;
+        const playerIndex = currentPlayer - 1;
+        
+        // Load battle configuration
+        const config = battleConfig.getConfig();
+        const currentArmy = battleConfig.getArmy(playerIndex);
+        
+        // Initialize army builder and canvas
+        const armyBuilder = new ArmyBuilder(playerIndex);
+        const canvasElement = document.getElementById('battlefieldCanvas');
+        const unitCanvas = new UnitCanvas(canvasElement, armyBuilder);
+        
+        // Initialize UI
+        document.getElementById('playerName').textContent = currentArmy.playerName;
+        document.getElementById('pointsMax').textContent = currentArmy.maxPoints;
+        updatePointsDisplay();
+        updateUnitList();
+        
+        // Update canvas label based on player
+        document.getElementById('canvasLabel').textContent = 
+            `${currentArmy.playerName}'s Army Deployment`;
+        
+        // Update navigation button text
+        const nextBtn = document.getElementById('nextBtn');
+        if (currentPlayer === 1) {
+            nextBtn.innerHTML = 'Next Player <span class="material-icons-outlined">arrow_forward</span>';
+        } else {
+            nextBtn.innerHTML = 'Start Battle <span class="material-icons-outlined">play_arrow</span>';
+        }
+        
+        // Spawn button handlers
+        document.querySelectorAll('.spawn-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const unitType = btn.dataset.type;
+                const result = armyBuilder.createUnit(unitType);
+                
+                if (result.success) {
+                    unitCanvas.renderUnit(result.unit);
+                    updatePointsDisplay();
+                    updateUnitList();
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+        
+        // Navigation handlers
+        document.getElementById('backBtn').addEventListener('click', () => {
+            if (currentPlayer === 1) {
+                window.location.href = 'player-setup.html';
+            } else {
+                window.location.href = 'army-setup.html?player=1';
+            }
+        });
+        
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('Clear all units from this army?')) {
+                // Clear all units
+                while (currentArmy.units.length > 0) {
+                    armyBuilder.removeUnit(currentArmy.units[0].id);
+                }
+                updatePointsDisplay();
+                updateUnitList();
+                unitCanvas.renderAllUnits();
+            }
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            // Validate army before proceeding
+            const validation = battleConfig.validateArmy(playerIndex);
+            
+            if (currentArmy.units.length === 0) {
+                alert('Please create at least one unit before proceeding.');
+                return;
+            }
+            
+            if (!validation.valid && validation.errors.some(e => e.includes('exceeds'))) {
+                alert(validation.errors.join('\n'));
+                return;
+            }
+            
+            // Save and proceed
+            battleConfig.save();
+            
+            if (currentPlayer === 1) {
+                // Go to player 2 setup
+                window.location.href = 'army-setup.html?player=2';
+            } else {
+                // Both armies ready - go to battle
+                alert('Battle simulation coming soon!\nBoth armies are ready.');
+                // window.location.href = 'battle.html';
+            }
+        });
+        
+        // Update points display
+        function updatePointsDisplay() {
+            const used = currentArmy.usedPoints;
+            const max = currentArmy.maxPoints;
+            const percentage = (used / max) * 100;
+            
+            document.getElementById('pointsUsed').textContent = used;
+            
+            const bar = document.getElementById('pointsBar');
+            bar.style.width = Math.min(percentage, 100) + '%';
+            
+            // Color coding
+            bar.classList.remove('warning', 'error');
+            if (percentage > 100) {
+                bar.classList.add('error');
+            } else if (percentage > 90) {
+                bar.classList.add('warning');
+            }
+        }
+        
+        // Update unit list
+        function updateUnitList() {
+            const unitCount = currentArmy.units.length;
+            document.getElementById('unitCount').textContent = `(${unitCount}/40)`;
+            
+            const listContent = document.getElementById('unitListContent');
+            
+            if (unitCount === 0) {
+                listContent.innerHTML = '<div class="empty-units">No units created yet. Click the + buttons above to spawn units.</div>';
+            } else {
+                // Build unit list
+                let html = '';
+                currentArmy.units.forEach(unit => {
+                    html += `
+                        <div class="unit-list-item" data-unit-id="${unit.id}">
+                            <div class="unit-list-info">
+                                <div class="unit-list-name">${unit.name}</div>
+                                <div class="unit-list-details">${unit.soldierCount} soldiers • ${unit.cost} pts</div>
+                            </div>
+                            <button class="unit-list-delete" data-unit-id="${unit.id}">
+                                <span class="material-icons-outlined">delete</span>
+                            </button>
+                        </div>
+                    `;
+                });
+                listContent.innerHTML = html;
+                
+                // Add delete handlers
+                listContent.querySelectorAll('.unit-list-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const unitId = btn.dataset.unitId;
+                        if (confirm('Delete this unit?')) {
+                            armyBuilder.removeUnit(unitId);
+                            updatePointsDisplay();
+                            updateUnitList();
+                            unitCanvas.renderAllUnits();
+                        }
+                    });
+                });
+                
+                // Add selection handlers
+                listContent.querySelectorAll('.unit-list-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const unitId = item.dataset.unitId;
+                        unitCanvas.selectUnit(unitId);
+                    });
+                });
+            }
+        }
+        
+        // Load existing units onto canvas
+        if (currentArmy.units.length > 0) {
+            unitCanvas.renderAllUnits();
+        }
+    </script>
+</body>
+</html>
