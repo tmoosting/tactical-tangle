@@ -174,28 +174,20 @@ export class UnitCanvas {
      * Select a unit
      */
     selectUnit(unitId) {
-        // Hide previous unit's buttons
+        // Hide previous unit's selection
         if (this.selectedUnit) {
             const prevElement = this.armyBuilder.unitElements.get(this.selectedUnit);
             if (prevElement) {
                 prevElement.classList.remove('selected');
-                const buttons = prevElement.querySelector('.unit-icon-buttons');
-                if (buttons) {
-                    buttons.style.display = 'none';
-                }
             }
         }
         
-        // Select new unit and show buttons
+        // Select new unit
         this.selectedUnit = unitId;
         if (unitId) {
             const element = this.armyBuilder.unitElements.get(unitId);
             if (element) {
                 element.classList.add('selected');
-                const buttons = element.querySelector('.unit-icon-buttons');
-                if (buttons) {
-                    buttons.style.display = 'flex';
-                }
             }
         }
     }
@@ -506,7 +498,6 @@ export class UnitCanvas {
     addIconButtons(element, unit) {
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'unit-icon-buttons';
-        buttonContainer.style.display = 'none';
         
         // Copy shape button
         const copyShapeBtn = document.createElement('button');
@@ -558,10 +549,10 @@ export class UnitCanvas {
             this.showCharacterPanel(unit.id);
         };
         
-        buttonContainer.appendChild(copyShapeBtn);
-        buttonContainer.appendChild(duplicateBtn);
-        buttonContainer.appendChild(alignBtn);
         buttonContainer.appendChild(setDefaultBtn);
+        buttonContainer.appendChild(copyShapeBtn);
+        buttonContainer.appendChild(alignBtn);
+        buttonContainer.appendChild(duplicateBtn);
         buttonContainer.appendChild(assignBtn);
         element.appendChild(buttonContainer);
     }
@@ -889,6 +880,16 @@ export class UnitCanvas {
             panel.style.display = 'none';
         });
         
+        // Click outside to close handler
+        document.addEventListener('click', (e) => {
+            if (panel.style.display === 'block' && !panel.contains(e.target)) {
+                // Don't close if clicking on the character assignment button that opens the panel
+                if (!e.target.closest('.assign-characters')) {
+                    panel.style.display = 'none';
+                }
+            }
+        });
+        
         // Search input handler
         const searchInput = panel.querySelector('.character-search-input');
         searchInput.addEventListener('input', (e) => {
@@ -998,9 +999,17 @@ export class UnitCanvas {
         this.saveHistory();
         
         if (role === 'general') {
-            unit.general = null;
+            // Use army builder's updateUnit method to persist changes
+            this.armyBuilder.updateUnit(unitId, {
+                general: null
+            });
         } else if (role === 'soldier') {
             unit.soldiers = unit.soldiers.filter(s => s.id !== characterId);
+            
+            // Use army builder's updateUnit method to persist changes
+            this.armyBuilder.updateUnit(unitId, {
+                soldiers: [...unit.soldiers]
+            });
         }
         
         // Update the display
@@ -1137,31 +1146,58 @@ export class UnitCanvas {
         const characterList = this.characterPanel.querySelector('.character-list');
         if (!characterList) return;
         
-        // Update header with character count
-        const header = this.characterPanel.querySelector('.available-characters h4');
-        if (header) {
-            header.textContent = `Available Characters (${this.availableCharacters.length})`;
-        }
+        // We'll update the header after counting available characters
         
         // Get current unit to check already assigned characters
         const unitId = this.characterPanel.dataset.unitId;
         const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
         if (!unit) return;
         
-        // Create a set of already assigned character IDs
+        // Create a set of already assigned character IDs (current unit + other armies)
         const assignedIds = new Set();
+        
+        // Add characters from current unit
         if (unit.general) assignedIds.add(unit.general.id);
         if (unit.soldiers) {
             unit.soldiers.forEach(s => assignedIds.add(s.id));
         }
         
-        console.log('🎭 Displaying characters in panel...');
-        console.log('Available characters count:', this.availableCharacters.length);
-        console.log('Already assigned IDs:', Array.from(assignedIds));
+        // Add characters from other units in current army
+        this.armyBuilder.army.units.forEach(u => {
+            if (u.id !== unitId) {
+                if (u.general) assignedIds.add(u.general.id);
+                if (u.soldiers) {
+                    u.soldiers.forEach(s => assignedIds.add(s.id));
+                }
+            }
+        });
+        
+        // Add characters from other player's army
+        let currentPlayer, otherPlayer, currentPlayerIndex, otherPlayerIndex;
+        if (typeof window !== 'undefined' && window.battleConfig) {
+            const params = new URLSearchParams(window.location.search);
+            currentPlayer = parseInt(params.get('player')) || 1;
+            currentPlayerIndex = currentPlayer - 1; // Convert to 0-indexed
+            otherPlayerIndex = currentPlayerIndex === 0 ? 1 : 0; // Other army index
+            otherPlayer = otherPlayerIndex + 1; // Convert back to 1-indexed for display
+            
+            try {
+                const otherArmy = window.battleConfig.getArmy(otherPlayerIndex);
+                
+                otherArmy.units.forEach(u => {
+                    if (u.general) assignedIds.add(u.general.id);
+                    if (u.soldiers) {
+                        u.soldiers.forEach(s => assignedIds.add(s.id));
+                    }
+                });
+            } catch (error) {
+                console.log('Could not load other army for character exclusion:', error);
+            }
+        }
+        
         
         if (this.availableCharacters.length === 0) {
-            console.log('❌ No characters available to display');
-            characterList.innerHTML = '<div class="loading">No characters available.</div>';
+            characterList.innerHTML = '';
             return;
         }
         
@@ -1171,7 +1207,6 @@ export class UnitCanvas {
         this.availableCharacters.forEach(character => {
             // Skip if already assigned
             if (assignedIds.has(character.id)) {
-                console.log(`⏩ Skipping already assigned character: ${character.name || character.id}`);
                 return;
             }
             
@@ -1186,24 +1221,37 @@ export class UnitCanvas {
                      data-character-id="${character.id}" 
                      data-character-name="${name}"
                      data-character-description="${description || ''}">
-                    <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 2px;">${name}</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">${description}</div>
+                    <div class="character-info">
+                        <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 2px;">${name}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${description}</div>
+                    </div>
+                    <div class="character-assignment-buttons">
+                        ${!unit.general ? `<button class="assign-btn assign-general" data-character-id="${character.id}" data-role="general" title="Assign as General">👑</button>` : ''}
+                        <button class="assign-btn assign-soldier" data-character-id="${character.id}" data-role="soldier" title="Assign as Soldier">⚔️</button>
+                    </div>
                 </div>
             `;
         });
         
-        console.log('✨ Built HTML for', availableCount, 'available characters');
+        
+        // Update header with correct count
+        const header = this.characterPanel.querySelector('.available-characters h4');
+        if (header) {
+            header.textContent = `Available Characters (${availableCount}/${this.availableCharacters.length})`;
+        }
         
         if (html === '') {
             characterList.innerHTML = '';
         } else {
             characterList.innerHTML = html;
             
-            // Add click handlers to assign characters
-            characterList.querySelectorAll('.character-list-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const characterId = item.dataset.characterId;
-                    this.promptCharacterAssignment(unitId, characterId);
+            // Add click handlers to assign characters with specific roles
+            characterList.querySelectorAll('.assign-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const characterId = btn.dataset.characterId;
+                    const role = btn.dataset.role;
+                    this.assignCharacterToUnit(unitId, characterId, role);
                 });
             });
         }
@@ -1280,9 +1328,9 @@ export class UnitCanvas {
     }
     
     /**
-     * Prompt user to assign character as general or soldier
+     * Assign character to unit with specific role
      */
-    promptCharacterAssignment(unitId, characterId) {
+    assignCharacterToUnit(unitId, characterId, role) {
         const unit = this.armyBuilder.army.units.find(u => u.id === unitId);
         const character = this.availableCharacters.find(c => c.id === characterId);
         if (!unit || !character) return;
@@ -1290,23 +1338,40 @@ export class UnitCanvas {
         // Save history before assignment
         this.saveHistory();
         
-        // If no general, assign as general by default
-        if (!unit.general) {
-            unit.general = {
-                id: character.id,
-                name: character.name || 'Unnamed'
-            };
-        } else {
-            // Otherwise assign as soldier
+        if (role === 'general') {
+            // Check if unit already has a general
+            if (unit.general) {
+                if (!confirm(`This unit already has a general (${unit.general.name}). Replace with ${character.name}?`)) {
+                    return;
+                }
+            }
+            
+            // Use army builder's updateUnit method to persist changes
+            this.armyBuilder.updateUnit(unitId, {
+                general: {
+                    id: character.id,
+                    name: character.name || 'Unnamed'
+                }
+            });
+        } else if (role === 'soldier') {
+            // Assign as soldier
             if (!unit.soldiers) unit.soldiers = [];
             unit.soldiers.push({
                 id: character.id,
                 name: character.name || 'Unnamed'
             });
+            
+            // Use army builder's updateUnit method to persist changes
+            this.armyBuilder.updateUnit(unitId, {
+                soldiers: [...unit.soldiers]
+            });
         }
         
+        // Refresh unit data after update
+        const updatedUnit = this.armyBuilder.army.units.find(u => u.id === unitId);
+        
         // Update displays
-        this.updateCharacterPanel(unit);
+        this.updateCharacterPanel(updatedUnit);
         this.updateUnitCharacterIndicators(unitId);
         this.displayAvailableCharacters();
     }

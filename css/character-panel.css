@@ -68,6 +68,8 @@
     flex: 1;
     overflow-y: auto;
     padding: 15px;
+    min-height: 0; /* Allows flex item to shrink below content size */
+    max-height: calc(500px - 60px); /* Total panel height minus header */
 }
 
 /* Search Section */
@@ -197,7 +199,7 @@
 }
 
 .character-list {
-    max-height: 200px;
+    max-height: 280px;
     overflow-y: auto;
     overflow-x: hidden; /* Prevent horizontal overflow */
     background: var(--bg-secondary);
@@ -207,24 +209,6 @@
     word-wrap: break-word; /* Wrap long text */
 }
 
-.character-list-item {
-    padding: 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-primary);
-    border-radius: 4px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.character-list-item:hover {
-    background: var(--bg-hover);
-    border-color: var(--brand-primary);
-}
-
-.character-list-item:last-child {
-    margin-bottom: 0;
-}
 
 .loading {
     color: var(--text-tertiary);
@@ -239,52 +223,49 @@
 /* Character Indicators on Units */
 .character-indicator {
     position: absolute;
-    background: white;
-    border-radius: 50%;
-    padding: 2px;
-    font-size: 12px;
+    font-size: 16px;
     z-index: 5;
     pointer-events: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 
 .general-indicator {
-    top: 2px;
-    right: 2px;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: gold;
+    top: 4px;
+    right: 4px;
+    color: #FFD700;
+    font-size: 18px;
 }
 
 .soldier-indicator {
-    bottom: 2px;
-    right: 2px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    font-size: 11px;
+    bottom: 4px;
+    right: 4px;
+    padding: 1px 4px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     gap: 2px;
+    min-width: 20px;
+    justify-content: center;
 }
 
 /* Dark mode indicators */
 [data-theme="dark"] .character-indicator {
-    background: var(--bg-secondary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
 }
 
 [data-theme="dark"] .general-indicator {
-    background: gold;
-    color: black;
+    color: #FFD700;
 }
 
 [data-theme="dark"] .soldier-indicator {
-    background: rgba(18, 24, 36, 0.9);
-    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
 }
 
 /* Duplicate button specific style */
@@ -329,4 +310,89 @@
 .character-panel-content::-webkit-scrollbar-thumb:hover,
 .character-list::-webkit-scrollbar-thumb:hover {
     background: var(--text-tertiary);
+}
+
+/* Character Assignment Buttons - enhanced list items */
+.character-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    transition: all 0.2s;
+}
+
+.character-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.character-info {
+    flex: 1;
+}
+
+.character-assignment-buttons {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.assign-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    padding: 0;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.assign-btn:hover {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+    transform: scale(1.05);
+}
+
+.assign-general:hover {
+    background: gold;
+    color: black;
+    border-color: #e6c200;
+}
+
+.assign-soldier:hover {
+    background: #ff6b35;
+    color: white;
+    border-color: #e55a2b;
+}
+
+/* Dark mode assignment buttons */
+[data-theme="dark"] .assign-btn {
+    background: var(--bg-primary);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .assign-btn:hover {
+    transform: scale(1.05);
+}
+
+[data-theme="dark"] .assign-general:hover {
+    background: gold;
+    color: black;
+    border-color: #e6c200;
+}
+
+[data-theme="dark"] .assign-soldier:hover {
+    background: #ff6b35;
+    color: white;
+    border-color: #e55a2b;
 }

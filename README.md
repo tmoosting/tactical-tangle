@@ -52,7 +52,7 @@ Then open http://localhost:8080
 - **Character Tooltips** - Hover over badges to see general/soldier names
 - **Inline Name Editing** - Click unit names to edit them directly
 - **Player Intelligence** - Player 2 can see Player 1's army point total
-- **Enhanced Character Management** - Improved assignment/unassignment flow
+- **Enhanced Character Management** - Direct general/soldier assignment with exclusion system
 - **Authentication Persistence** - Credentials saved across page navigation
 
 ## 🛠️ Technology
@@ -92,7 +92,8 @@ This tool is being built alongside the [My First Tool](https://onlyworlds.github
 1. Get your API credentials from [onlyworlds.com](https://www.onlyworlds.com)
 2. Enter your API Key (10 digits) and PIN (4 digits)
 3. Your world and characters will load automatically
-4. Characters can be assigned as generals (1 per unit) or soldiers (unlimited)
+4. Characters can be assigned as generals (1 per unit) or soldiers (unlimited) using direct role assignment buttons
+5. Character assignments are exclusive between players - assigned characters become unavailable to the opposing player
 
 ## 🏛️ Historical Context
 
